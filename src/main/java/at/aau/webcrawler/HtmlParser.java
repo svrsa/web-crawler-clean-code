@@ -1,5 +1,16 @@
 package at.aau.webcrawler;
 
-public class HtmlParser {
+import org.jsoup.nodes.Document;
 
+import java.util.ArrayList;
+import java.util.List;
+
+public class HtmlParser {
+  public List<String> extractHeadings(Document document) {
+    List<String> headings = new ArrayList<>();
+
+    document.select("h1, h2, h3, h4, h5, h6").forEach(element -> headings.add(element.text()));
+
+    return headings;
+  }
 }
