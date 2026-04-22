@@ -1,5 +1,6 @@
 package at.aau.webcrawler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ArgumentParser {
@@ -10,7 +11,16 @@ public class ArgumentParser {
 
     String startUrl = args[0];
     int maxDepth = Integer.parseInt(args[1]);
-    List<String> allowedDomains = List.of(args[2].split(","));
+    if (maxDepth < 0) {
+      throw new IllegalArgumentException("Depth must not be negative");
+    }
+
+    String[] domainParts = args[2].split(",");
+    List<String> allowedDomains = new ArrayList<>();
+
+    for (String domainPart : domainParts) {
+      allowedDomains.add(domainPart.trim());
+    }
 
     return new CrawlerConfiguration(startUrl, maxDepth, allowedDomains);
   }
