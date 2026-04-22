@@ -26,4 +26,12 @@ class ArgumentParserTest {
 
     assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
   }
+
+  @Test
+  void shouldThrowExceptionWhenDepthIsNegative() {
+    ArgumentParser parser = new ArgumentParser();
+    String[] args = {"https://example.com", "-1", "example.com"};
+
+    assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
+  }
 }
