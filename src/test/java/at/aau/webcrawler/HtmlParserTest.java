@@ -30,4 +30,23 @@ class HtmlParserTest {
     assertEquals("Section Title", headings.get(1));
     assertEquals("Subsection Title", headings.get(2));
   }
+
+  @Test
+  void shouldExtractAllLinks() {
+    HtmlParser parser = new HtmlParser();
+    Document document = Jsoup.parse("""
+                <html>
+                    <body>
+                        <a href="https://example.com">Example</a>
+                        <a href="https://example.org">Example Org</a>
+                    </body>
+                </html>
+                """, "https://base.com");
+
+    List<String> links = parser.extractLinks(document);
+
+    assertEquals(2, links.size());
+    assertEquals("https://example.com", links.get(0));
+    assertEquals("https://example.org", links.get(1));
+  }
 }
