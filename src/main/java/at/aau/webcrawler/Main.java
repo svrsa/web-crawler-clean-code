@@ -14,6 +14,10 @@ public class Main {
     System.out.println("URL: " + pageResult.getUrl());
     System.out.println("Depth: " + pageResult.getDepth());
     System.out.println("Headings: " + pageResult.getHeadings());
-    System.out.println("Links: " + pageResult.getLinks());
+
+    System.out.println("Links:");
+    for (LinkResult link : pageResult.getLinks()) {
+      System.out.println("- " + link.getUrl() + " (broken: " + link.isBroken() + ")");
+    }
   }
 }
