@@ -5,9 +5,12 @@ import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CrawlerService {
+  private final Set<String> visitedUrls = new HashSet<>();
 
   public Document loadDocument(String url) {
     try {
@@ -17,7 +20,21 @@ public class CrawlerService {
     }
   }
 
+  public boolean hasVisited(String url) {
+    return visitedUrls.contains(url);
+  }
+
+  public void markAsVisited(String url) {
+    visitedUrls.add(url);
+  }
+
   public PageResult analyzePage(String url, int depth) {
+    if (hasVisited(url)) {
+      throw new IllegalArgumentException("URL has already been visited: " + url);
+    }
+
+    markAsVisited(url);
+
     Document document = loadDocument(url);
     HtmlParser htmlParser = new HtmlParser();
 
