@@ -13,4 +13,12 @@ public class HtmlParser {
 
     return headings;
   }
+
+  public List<String> extractLinks(Document document) {
+    List<String> links = new ArrayList<>();
+
+    document.select("a[href]").forEach(element -> links.add(element.attr("abs:href")));
+
+    return links;
+  }
 }
