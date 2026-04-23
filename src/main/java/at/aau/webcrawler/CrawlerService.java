@@ -53,4 +53,35 @@ public class CrawlerService {
 
     return new PageResult(url, depth, headings, links);
   }
+
+  public List<PageResult> crawl(String startUrl, int maxDepth, List<String> allowedDomains) {
+    List<PageResult> results = new ArrayList<>();
+    crawlRecursive(startUrl, maxDepth, allowedDomains, results);
+    return results;
+  }
+
+  private void crawlRecursive(String url, int depth, List<String> allowedDomains, List<PageResult> results) {
+    if (depth < 0) {
+      return;
+    }
+
+    if (!domainFilter.isAllowed(url, allowedDomains)) {
+      return;
+    }
+
+    if (hasVisited(url)) {
+      return;
+    }
+
+    PageResult pageResult = analyzePage(url, depth, allowedDomains);
+    results.add(pageResult);
+
+    if (depth == 0) {
+      return;
+    }
+
+    for (LinkResult link : pageResult.getLinks()) {
+      crawlRecursive(link.getUrl(), depth - 1, allowedDomains, results);
+    }
+  }
 }
