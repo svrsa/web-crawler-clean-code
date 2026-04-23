@@ -7,12 +7,14 @@ public class PageResult {
   private final int depth;
   private final List<String> headings;
   private final List<LinkResult> links;
+  private final List<PageResult> childPages;
 
-  public PageResult(String url, int depth, List<String> headings, List<LinkResult> links) {
+  public PageResult(String url, int depth, List<String> headings, List<LinkResult> links, List<PageResult> childPages) {
     this.url = url;
     this.depth = depth;
     this.headings = headings;
     this.links = links;
+    this.childPages = childPages;
   }
 
   public String getUrl() {
@@ -29,5 +31,9 @@ public class PageResult {
 
   public List<LinkResult> getLinks() {
     return links;
+  }
+
+  public List<PageResult> getChildPages() {
+    return childPages;
   }
 }

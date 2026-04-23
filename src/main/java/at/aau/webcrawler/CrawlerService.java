@@ -55,45 +55,23 @@ public class CrawlerService {
     List<String> headings = htmlParser.extractHeadings(document);
     List<String> extractedLinks = htmlParser.extractLinks(document);
     List<LinkResult> links = new ArrayList<>();
+    List<PageResult> childPages = new ArrayList<>();
 
     for (String extractedLink : extractedLinks) {
       boolean broken = isBrokenLink(extractedLink);
       links.add(new LinkResult(extractedLink, broken));
     }
 
-    return new PageResult(url, depth, headings, links);
-  }
-
-  public List<PageResult> crawl(String startUrl, int maxDepth, List<String> allowedDomains) {
-    List<PageResult> results = new ArrayList<>();
-    crawlRecursive(startUrl, maxDepth, allowedDomains, results);
-    return results;
-  }
-
-  private void crawlRecursive(String url, int depth, List<String> allowedDomains, List<PageResult> results) {
-    if (depth < 0) {
-      return;
-    }
-
-    if (!domainFilter.isAllowed(url, allowedDomains)) {
-      return;
-    }
-
-    if (hasVisited(url)) {
-      return;
-    }
-
-    PageResult pageResult = analyzePage(url, depth, allowedDomains);
-    results.add(pageResult);
-
-    if (depth == 0) {
-      return;
-    }
-
-    for (LinkResult link : pageResult.getLinks()) {
-      if (!link.isBroken()) {
-        crawlRecursive(link.getUrl(), depth - 1, allowedDomains, results);
+    if (depth > 0) {
+      for (LinkResult link : links) {
+        if (!link.isBroken()
+            && domainFilter.isAllowed(link.getUrl(), allowedDomains)
+            && !hasVisited(link.getUrl())) {
+          childPages.add(analyzePage(link.getUrl(), depth - 1, allowedDomains));
+        }
       }
     }
+
+    return new PageResult(url, depth, headings, links, childPages);
   }
 }
