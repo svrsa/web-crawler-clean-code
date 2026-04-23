@@ -29,6 +29,15 @@ public class CrawlerService {
     visitedUrls.add(url);
   }
 
+  public boolean isBrokenLink(String url) {
+    try {
+      int statusCode = Jsoup.connect(url).ignoreHttpErrors(true).execute().statusCode();
+      return statusCode >= 400;
+    } catch (IOException exception) {
+      return true;
+    }
+  }
+
   public PageResult analyzePage(String url, int depth, List<String> allowedDomains) {
     if (!domainFilter.isAllowed(url, allowedDomains)) {
       throw new IllegalArgumentException("URL is not in an allowed domain: " + url);
@@ -48,7 +57,8 @@ public class CrawlerService {
     List<LinkResult> links = new ArrayList<>();
 
     for (String extractedLink : extractedLinks) {
-      links.add(new LinkResult(extractedLink, false));
+      boolean broken = isBrokenLink(extractedLink);
+      links.add(new LinkResult(extractedLink, broken));
     }
 
     return new PageResult(url, depth, headings, links);
@@ -81,7 +91,9 @@ public class CrawlerService {
     }
 
     for (LinkResult link : pageResult.getLinks()) {
-      crawlRecursive(link.getUrl(), depth - 1, allowedDomains, results);
+      if (!link.isBroken()) {
+        crawlRecursive(link.getUrl(), depth - 1, allowedDomains, results);
+      }
     }
   }
 }
