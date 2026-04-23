@@ -8,7 +8,8 @@ public class Main {
     CrawlerService crawlerService = new CrawlerService();
     PageResult pageResult = crawlerService.analyzePage(
         configuration.getStartUrl(),
-        configuration.getMaxDepth()
+        configuration.getMaxDepth(),
+        configuration.getAllowedDomains()
     );
 
     System.out.println("URL: " + pageResult.getUrl());

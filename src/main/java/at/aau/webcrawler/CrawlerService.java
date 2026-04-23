@@ -11,6 +11,7 @@ import java.util.Set;
 
 public class CrawlerService {
   private final Set<String> visitedUrls = new HashSet<>();
+  private final DomainFilter domainFilter = new DomainFilter();
 
   public Document loadDocument(String url) {
     try {
@@ -28,7 +29,11 @@ public class CrawlerService {
     visitedUrls.add(url);
   }
 
-  public PageResult analyzePage(String url, int depth) {
+  public PageResult analyzePage(String url, int depth, List<String> allowedDomains) {
+    if (!domainFilter.isAllowed(url, allowedDomains)) {
+      throw new IllegalArgumentException("URL is not in an allowed domain: " + url);
+    }
+
     if (hasVisited(url)) {
       throw new IllegalArgumentException("URL has already been visited: " + url);
     }
