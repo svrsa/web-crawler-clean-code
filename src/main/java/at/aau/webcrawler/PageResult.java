@@ -6,9 +6,9 @@ public class PageResult {
   private final String url;
   private final int depth;
   private final List<String> headings;
-  private final List<String> links;
+  private final List<LinkResult> links;
 
-  public PageResult(String url, int depth, List<String> headings, List<String> links) {
+  public PageResult(String url, int depth, List<String> headings, List<LinkResult> links) {
     this.url = url;
     this.depth = depth;
     this.headings = headings;
@@ -27,7 +27,7 @@ public class PageResult {
     return headings;
   }
 
-  public List<String> getLinks() {
+  public List<LinkResult> getLinks() {
     return links;
   }
 }

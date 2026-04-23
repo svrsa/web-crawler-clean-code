@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CrawlerService {
@@ -21,7 +22,12 @@ public class CrawlerService {
     HtmlParser htmlParser = new HtmlParser();
 
     List<String> headings = htmlParser.extractHeadings(document);
-    List<String> links = htmlParser.extractLinks(document);
+    List<String> extractedLinks = htmlParser.extractLinks(document);
+    List<LinkResult> links = new ArrayList<>();
+
+    for (String extractedLink : extractedLinks) {
+      links.add(new LinkResult(extractedLink, false));
+    }
 
     return new PageResult(url, depth, headings, links);
   }
