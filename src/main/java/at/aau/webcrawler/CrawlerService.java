@@ -38,6 +38,8 @@ public class CrawlerService {
     }
   }
 
+  // AI-assisted: the recursive structure of this method was discussed with AI.
+  // The final implementation was manually adapted, reviewed, and tested.
   public PageResult crawlPage(String url, int depth, List<String> allowedDomains) {
     if (!domainFilter.isAllowed(url, allowedDomains)) {
       throw new IllegalArgumentException("URL is not in an allowed domain: " + url);
@@ -64,6 +66,8 @@ public class CrawlerService {
     return pageResult;
   }
 
+  // AI-assisted: the basic structure of this method was refined with AI support.
+  // The final implementation was manually adapted and validated.
   private PageResult analyzeSinglePage(String url, int depth) {
     Document document = loadDocument(url);
     HtmlParser htmlParser = new HtmlParser();
