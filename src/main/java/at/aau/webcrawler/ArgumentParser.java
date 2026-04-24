@@ -19,7 +19,15 @@ public class ArgumentParser {
     List<String> allowedDomains = new ArrayList<>();
 
     for (String domainPart : domainParts) {
-      allowedDomains.add(domainPart.trim());
+      String trimmedDomain = domainPart.trim();
+
+      if (!trimmedDomain.isEmpty()) {
+        allowedDomains.add(trimmedDomain);
+      }
+    }
+
+    if (allowedDomains.isEmpty()) {
+      throw new IllegalArgumentException("At least one allowed domain is required");
     }
 
     return new CrawlerConfiguration(startUrl, maxDepth, allowedDomains);
