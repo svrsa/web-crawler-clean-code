@@ -1,5 +1,6 @@
 package at.aau.webcrawler;
 
+import at.aau.webcrawler.model.PageResult;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package at.aau.webcrawler;
+package at.aau.webcrawler.model;
 
 import java.util.List;
 
