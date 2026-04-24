@@ -71,10 +71,13 @@ public class CrawlerService {
     List<String> headings = htmlParser.extractHeadings(document);
     List<String> extractedLinks = htmlParser.extractLinks(document);
     List<LinkResult> links = new ArrayList<>();
+    Set<String> uniqueLinks = new HashSet<>();
 
     for (String extractedLink : extractedLinks) {
-      boolean broken = isBrokenLink(extractedLink);
-      links.add(new LinkResult(extractedLink, broken));
+      if (uniqueLinks.add(extractedLink)) {
+        boolean broken = isBrokenLink(extractedLink);
+        links.add(new LinkResult(extractedLink, broken));
+      }
     }
 
     return new PageResult(url, depth, headings, links, new ArrayList<>());
