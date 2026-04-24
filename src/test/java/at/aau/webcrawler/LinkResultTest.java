@@ -1,5 +1,6 @@
 package at.aau.webcrawler;
 
+import at.aau.webcrawler.model.LinkResult;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

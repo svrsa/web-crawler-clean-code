@@ -1,5 +1,7 @@
 package at.aau.webcrawler;
 
+import at.aau.webcrawler.config.ArgumentParser;
+import at.aau.webcrawler.config.CrawlerConfiguration;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

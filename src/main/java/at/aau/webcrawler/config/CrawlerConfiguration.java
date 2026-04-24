@@ -1,4 +1,4 @@
-package at.aau.webcrawler;
+package at.aau.webcrawler.config;
 
 import java.util.List;
 

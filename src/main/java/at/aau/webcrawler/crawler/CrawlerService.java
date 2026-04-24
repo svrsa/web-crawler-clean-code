@@ -1,5 +1,8 @@
-package at.aau.webcrawler;
+package at.aau.webcrawler.crawler;
 
+import at.aau.webcrawler.parser.HtmlParser;
+import at.aau.webcrawler.model.LinkResult;
+import at.aau.webcrawler.model.PageResult;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 

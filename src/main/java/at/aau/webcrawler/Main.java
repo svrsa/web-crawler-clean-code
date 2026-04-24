@@ -1,5 +1,11 @@
 package at.aau.webcrawler;
 
+import at.aau.webcrawler.config.ArgumentParser;
+import at.aau.webcrawler.config.CrawlerConfiguration;
+import at.aau.webcrawler.crawler.CrawlerService;
+import at.aau.webcrawler.model.LinkResult;
+import at.aau.webcrawler.model.PageResult;
+
 public class Main {
   public static void main(String[] args) {
     ArgumentParser argumentParser = new ArgumentParser();

@@ -1,4 +1,4 @@
-package at.aau.webcrawler;
+package at.aau.webcrawler.crawler;
 
 import java.net.URI;
 import java.util.List;
