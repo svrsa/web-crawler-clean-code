@@ -200,6 +200,12 @@ Examples:
 - broken links should be clearly highlighted in the markdown report
 - code should remain clean, readable, and modular
 
+## AI Usage
+
+AI was used as a supporting tool for discussing design ideas, selected refactorings, and small implementation details.
+AI-assisted code sections are marked directly in the source code with comments.
+All AI-assisted parts were manually reviewed, adapted, and tested.
+
 ## Submission
 
 The repository should contain:

@@ -5,6 +5,8 @@ import java.util.List;
 
 public class DomainFilter {
 
+  // AI-assisted: the domain-matching logic of this method was refined with AI support.
+  // The final implementation was manually adapted and tested.
   public boolean isAllowed(String url, List<String> allowedDomains) {
     String host = URI.create(url).getHost();
 
