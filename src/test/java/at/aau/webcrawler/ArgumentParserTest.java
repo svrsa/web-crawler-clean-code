@@ -34,4 +34,16 @@ class ArgumentParserTest {
 
     assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
   }
+
+  @Test
+  void shouldIgnoreEmptyAllowedDomains() {
+    ArgumentParser parser = new ArgumentParser();
+    String[] args = {"https://example.com", "1", "example.com, ,iana.org"};
+
+    CrawlerConfiguration configuration = parser.parse(args);
+
+    assertEquals(2, configuration.getAllowedDomains().size());
+    assertEquals("example.com", configuration.getAllowedDomains().get(0));
+    assertEquals("iana.org", configuration.getAllowedDomains().get(1));
+  }
 }
