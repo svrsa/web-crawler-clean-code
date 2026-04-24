@@ -12,8 +12,13 @@ public class DomainFilter {
       return false;
     }
 
+    String normalizedHost = host.toLowerCase();
+
     for (String allowedDomain : allowedDomains) {
-      if (host.equalsIgnoreCase(allowedDomain.trim())) {
+      String normalizedDomain = allowedDomain.trim().toLowerCase();
+
+      if (normalizedHost.equals(normalizedDomain)
+          || normalizedHost.endsWith("." + normalizedDomain)) {
         return true;
       }
     }

@@ -32,4 +32,16 @@ class DomainFilterTest {
 
     assertFalse(allowed);
   }
+
+  @Test
+  void shouldAllowSubdomainOfAllowedDomain() {
+    DomainFilter domainFilter = new DomainFilter();
+
+    boolean allowed = domainFilter.isAllowed(
+        "https://www.example.com/page",
+        List.of("example.com")
+    );
+
+    assertTrue(allowed);
+  }
 }
