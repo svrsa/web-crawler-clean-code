@@ -6,7 +6,7 @@ public class Main {
     CrawlerConfiguration configuration = argumentParser.parse(args);
 
     CrawlerService crawlerService = new CrawlerService();
-    PageResult pageResult = crawlerService.analyzePage(
+    PageResult pageResult = crawlerService.crawlPage(
         configuration.getStartUrl(),
         configuration.getMaxDepth(),
         configuration.getAllowedDomains()

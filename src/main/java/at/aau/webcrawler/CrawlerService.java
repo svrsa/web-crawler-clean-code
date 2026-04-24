@@ -38,7 +38,7 @@ public class CrawlerService {
     }
   }
 
-  public PageResult analyzePage(String url, int depth, List<String> allowedDomains) {
+  public PageResult crawlPage(String url, int depth, List<String> allowedDomains) {
     if (!domainFilter.isAllowed(url, allowedDomains)) {
       throw new IllegalArgumentException("URL is not in an allowed domain: " + url);
     }
@@ -49,29 +49,34 @@ public class CrawlerService {
 
     markAsVisited(url);
 
+    PageResult pageResult = analyzeSinglePage(url, depth);
+
+    if (depth > 0) {
+      for (LinkResult link : pageResult.getLinks()) {
+        if (!link.isBroken()
+            && domainFilter.isAllowed(link.getUrl(), allowedDomains)
+            && !hasVisited(link.getUrl())) {
+          pageResult.getChildPages().add(crawlPage(link.getUrl(), depth - 1, allowedDomains));
+        }
+      }
+    }
+
+    return pageResult;
+  }
+
+  private PageResult analyzeSinglePage(String url, int depth) {
     Document document = loadDocument(url);
     HtmlParser htmlParser = new HtmlParser();
 
     List<String> headings = htmlParser.extractHeadings(document);
     List<String> extractedLinks = htmlParser.extractLinks(document);
     List<LinkResult> links = new ArrayList<>();
-    List<PageResult> childPages = new ArrayList<>();
 
     for (String extractedLink : extractedLinks) {
       boolean broken = isBrokenLink(extractedLink);
       links.add(new LinkResult(extractedLink, broken));
     }
 
-    if (depth > 0) {
-      for (LinkResult link : links) {
-        if (!link.isBroken()
-            && domainFilter.isAllowed(link.getUrl(), allowedDomains)
-            && !hasVisited(link.getUrl())) {
-          childPages.add(analyzePage(link.getUrl(), depth - 1, allowedDomains));
-        }
-      }
-    }
-
-    return new PageResult(url, depth, headings, links, childPages);
+    return new PageResult(url, depth, headings, links, new ArrayList<>());
   }
 }
