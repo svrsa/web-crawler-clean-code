@@ -56,7 +56,7 @@ public class CrawlerService {
         if (!link.isBroken()
             && domainFilter.isAllowed(link.getUrl(), allowedDomains)
             && !hasVisited(link.getUrl())) {
-          pageResult.getChildPages().add(crawlPage(link.getUrl(), depth - 1, allowedDomains));
+          pageResult.addChildPage(crawlPage(link.getUrl(), depth - 1, allowedDomains));
         }
       }
     }

@@ -36,4 +36,8 @@ public class PageResult {
   public List<PageResult> getChildPages() {
     return childPages;
   }
+
+  public void addChildPage(PageResult childPage) {
+    childPages.add(childPage);
+  }
 }
