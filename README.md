@@ -42,13 +42,25 @@ The crawler should:
 │   │   └── java/
 │   │       └── at/aau/webcrawler/
 │   │           ├── Main.java
-│   │           ├── ArgumentParser.java
-│   │           ├── CrawlerService.java
-│   │           ├── HtmlParser.java
-│   │           └── ...
+│   │           ├── config/
+│   │           │   ├── ArgumentParser.java
+│   │           │   └── CrawlerConfiguration.java
+│   │           ├── crawler/
+│   │           │   ├── CrawlerService.java
+│   │           │   └── DomainFilter.java
+│   │           ├── model/
+│   │           │   ├── LinkResult.java
+│   │           │   └── PageResult.java
+│   │           └── parser/
+│   │               └── HtmlParser.java
 │   └── test/
 │       └── java/
 │           └── at/aau/webcrawler/
+│               ├── ArgumentParserTest.java
+│               ├── DomainFilterTest.java
+│               ├── HtmlParserTest.java
+│               ├── LinkResultTest.java
+│               └── PageResultTest.java
 ├── pom.xml
 └── README.md
 ```
