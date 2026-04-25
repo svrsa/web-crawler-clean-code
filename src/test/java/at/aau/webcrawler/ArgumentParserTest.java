@@ -48,4 +48,12 @@ class ArgumentParserTest {
     assertEquals("example.com", configuration.getAllowedDomains().get(0));
     assertEquals("iana.org", configuration.getAllowedDomains().get(1));
   }
+
+  @Test
+  void shouldThrowExceptionWhenDepthIsNotANumber() {
+    ArgumentParser parser = new ArgumentParser();
+    String[] args = {"https://example.com", "abc", "example.com"};
+
+    assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
+  }
 }
