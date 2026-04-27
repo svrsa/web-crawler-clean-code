@@ -27,9 +27,9 @@ class HtmlParserTest {
     List<String> headings = parser.extractHeadings(document);
 
     assertEquals(3, headings.size());
-    assertEquals("Main Title", headings.get(0));
-    assertEquals("Section Title", headings.get(1));
-    assertEquals("Subsection Title", headings.get(2));
+    assertEquals("# Main Title", headings.get(0));
+    assertEquals("## Section Title", headings.get(1));
+    assertEquals("### Subsection Title", headings.get(2));
   }
 
   @Test

@@ -51,8 +51,11 @@ The crawler should:
 │   │           ├── model/
 │   │           │   ├── LinkResult.java
 │   │           │   └── PageResult.java
-│   │           └── parser/
-│   │               └── HtmlParser.java
+│   │           ├── parser/
+│   │           │   └── HtmlParser.java
+│   │           └── writer/
+│   │               ├── MarkdownWriter.java
+│   │               └── ReportWriteException.java
 │   └── test/
 │       └── java/
 │           └── at/aau/webcrawler/
@@ -60,30 +63,75 @@ The crawler should:
 │               ├── DomainFilterTest.java
 │               ├── HtmlParserTest.java
 │               ├── LinkResultTest.java
-│               └── PageResultTest.java
+│               ├── MarkdownWriterTest.java
+│               ├── PageResultTest.java
+│               └── WebCrawlerIntegrationTest.java
 ├── pom.xml
 └── README.md
 ```
 
-## Planned Components
+## Components
 
-- `Main`  
-  Entry point of the application.
+- **`Main`**  
+  Entry point of the application. Wires together configuration, crawling, and report writing.
+  
+- **`ArgumentParser`**  
+  Parses and validates command-line arguments (URL, depth, allowed domains).
+  
+- **`CrawlerConfiguration`**  
+  Immutable value object holding the parsed crawler settings.
+  
+- **`CrawlerService`**  
+  Contains the main crawling logic: recursion, depth handling, duplicate-visit prevention, and broken link detection.
+  
+- **`DomainFilter`**  
+  Decides whether a URL belongs to one of the allowed domains.
+  
+- **`HtmlParser`**  
+  Extracts headings (with Markdown `#` prefix) and absolute links from HTML documents via jsoup.
+  
+- **`MarkdownWriter`**  
+  Generates the final `report.md`. Accepts an optional `Path` via constructor for testability (DIP).
+  
+- **`ReportWriteException`**  
+  Dedicated unchecked exception thrown when the report cannot be written.
+  
+- **`model` package**  
+  `PageResult` and `LinkResult` store the crawled data as plain value objects.
 
-- `ArgumentParser`  
-  Parses and validates command-line arguments.
-
-- `CrawlerService`  
-  Contains the main crawling logic, recursion, depth handling, and duplicate-visit prevention.
-
-- `HtmlParser`  
-  Extracts headings and links from HTML documents.
-
-- `MarkdownWriter`  
-  Generates the final `report.md` output.
-
-- `model` package  
-  Stores result objects for crawled pages and links.
+## Report Format
+ 
+Each crawled page is written in the following structure:
+ 
+```
+<a>[https://example.com](https://example.com)</a>
+<br>depth: 2
+# Heading 1
+## Heading 1.1
+ 
+<br>link to <a>[https://linked-page.com](https://linked-page.com)</a>
+ 
+<br>broken link <a>[https://broken.com](https://broken.com)</a>
+```
+ 
+Pages at deeper levels receive an arrow prefix that reflects their depth relative to the root:
+ 
+| Level below root | Arrow prefix |
+|-----------------|--------------|
+| 0 (root)        | *(none)*     |
+| 1               | `-->`        |
+| 2               | `---->`      |
+| 3               | `------>`    |
+ 
+Example for a child page one level below root:
+ 
+```
+<a>[https://child.com](https://child.com)</a>
+<br>depth: 1
+## --> Child Heading
+ 
+<br>--> link to <a>[https://grandchild.com](https://grandchild.com)</a>
+```
 
 ## Functional Requirements
 
