@@ -1,8 +1,8 @@
 package at.aau.webcrawler.crawler;
 
-import at.aau.webcrawler.parser.HtmlParser;
 import at.aau.webcrawler.model.LinkResult;
 import at.aau.webcrawler.model.PageResult;
+import at.aau.webcrawler.parser.HtmlParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -33,6 +33,10 @@ public class CrawlerService {
   }
 
   public boolean isBrokenLink(String url) {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      return true;
+    }
+
     try {
       int statusCode = Jsoup.connect(url).ignoreHttpErrors(true).execute().statusCode();
       return statusCode >= 400;
