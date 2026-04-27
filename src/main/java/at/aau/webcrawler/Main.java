@@ -5,6 +5,7 @@ import at.aau.webcrawler.config.CrawlerConfiguration;
 import at.aau.webcrawler.crawler.CrawlerService;
 import at.aau.webcrawler.model.LinkResult;
 import at.aau.webcrawler.model.PageResult;
+import at.aau.webcrawler.writer.MarkdownWriter;
 
 public class Main {
   public static void main(String[] args) {
@@ -17,7 +18,8 @@ public class Main {
         configuration.getMaxDepth(),
         configuration.getAllowedDomains()
     );
-
+    new MarkdownWriter().writeReport(pageResult);
+    System.out.println("Report wurde als report.md gespeichert.");
     printPageResult(pageResult);
   }
 
