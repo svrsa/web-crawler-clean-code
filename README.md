@@ -51,8 +51,11 @@ The crawler should:
 │   │           ├── model/
 │   │           │   ├── LinkResult.java
 │   │           │   └── PageResult.java
-│   │           └── parser/
-│   │               └── HtmlParser.java
+│   │           ├── parser/
+│   │           │   └── HtmlParser.java
+│   │           └── writer/
+│   │               ├── MarkdownWriter.java
+│   │               └── ReportWriteException.java
 │   └── test/
 │       └── java/
 │           └── at/aau/webcrawler/
@@ -60,7 +63,9 @@ The crawler should:
 │               ├── DomainFilterTest.java
 │               ├── HtmlParserTest.java
 │               ├── LinkResultTest.java
-│               └── PageResultTest.java
+│               ├── MarkdownWriterTest.java
+│               ├── PageResultTest.java
+│               └── WebCrawlerIntegrationTest.java
 ├── pom.xml
 └── README.md
 ```
