@@ -13,12 +13,14 @@ import java.util.List;
 import java.util.Set;
 
 public class CrawlerService {
+  private static final int REQUEST_TIMEOUT_MS = 5000;
+
   private final Set<String> visitedUrls = new HashSet<>();
   private final DomainFilter domainFilter = new DomainFilter();
 
   public Document loadDocument(String url) {
     try {
-      return Jsoup.connect(url).get();
+      return Jsoup.connect(url).timeout(REQUEST_TIMEOUT_MS).get();
     } catch (IOException exception) {
       throw new IllegalArgumentException("Could not load document from URL: " + url, exception);
     }
@@ -38,7 +40,11 @@ public class CrawlerService {
     }
 
     try {
-      int statusCode = Jsoup.connect(url).ignoreHttpErrors(true).execute().statusCode();
+      int statusCode = Jsoup.connect(url)
+          .timeout(REQUEST_TIMEOUT_MS)
+          .ignoreHttpErrors(true)
+          .execute()
+          .statusCode();
       return statusCode >= 400;
     } catch (IOException exception) {
       return true;
