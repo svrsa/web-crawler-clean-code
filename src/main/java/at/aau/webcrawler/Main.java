@@ -18,7 +18,7 @@ public class Main {
         configuration.getMaxDepth(),
         configuration.getAllowedDomains()
     );
-    MarkdownWriter.writeReport(pageResult);
+    new MarkdownWriter().writeReport(pageResult);
     System.out.println("Report wurde als report.md gespeichert.");
     printPageResult(pageResult);
   }
