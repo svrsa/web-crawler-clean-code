@@ -10,7 +10,6 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,13 +33,9 @@ class MarkdownWriterTest {
 
     @Test
     void testReportFileIsCreated() {
-        PageResult root = new PageResult(
-                "http://example.com",
-                0,
-                List.of("# Heading 1"),
-                Collections.emptyList(),
-                Collections.emptyList()
-        );
+        PageResult root = PageResult.builder("http://example.com", 0)
+                .headings(List.of("# Heading 1"))
+                .build();
 
         writer.writeReport(root);
 
@@ -49,13 +44,9 @@ class MarkdownWriterTest {
 
     @Test
     void testReportContainsUrl() throws IOException {
-        PageResult root = new PageResult(
-                "http://example.com",
-                0,
-                List.of("# Main Heading"),
-                Collections.emptyList(),
-                Collections.emptyList()
-        );
+        PageResult root = PageResult.builder("http://example.com", 0)
+                .headings(List.of("# Main Heading"))
+                .build();
 
         writer.writeReport(root);
         String content = Files.readString(reportPath);
@@ -66,13 +57,7 @@ class MarkdownWriterTest {
 
     @Test
     void testReportContainsDepth() throws IOException {
-        PageResult root = new PageResult(
-                "http://example.com",
-                2,
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList()
-        );
+        PageResult root = PageResult.builder("http://example.com", 2).build();
 
         writer.writeReport(root);
         String content = Files.readString(reportPath);
@@ -82,13 +67,9 @@ class MarkdownWriterTest {
 
     @Test
     void testReportContainsHeadings() throws IOException {
-        PageResult root = new PageResult(
-                "http://example.com",
-                0,
-                List.of("# Main Heading", "## Sub Heading"),
-                Collections.emptyList(),
-                Collections.emptyList()
-        );
+        PageResult root = PageResult.builder("http://example.com", 0)
+                .headings(List.of("# Main Heading", "## Sub Heading"))
+                .build();
 
         writer.writeReport(root);
         String content = Files.readString(reportPath);
@@ -100,13 +81,9 @@ class MarkdownWriterTest {
     @Test
     void testReportContainsWorkingLink() throws IOException {
         LinkResult link = new LinkResult("http://example.com/page", false);
-        PageResult root = new PageResult(
-                "http://example.com",
-                0,
-                Collections.emptyList(),
-                List.of(link),
-                Collections.emptyList()
-        );
+        PageResult root = PageResult.builder("http://example.com", 0)
+                .links(List.of(link))
+                .build();
 
         writer.writeReport(root);
         String content = Files.readString(reportPath);
@@ -119,13 +96,9 @@ class MarkdownWriterTest {
     @Test
     void testReportContainsBrokenLink() throws IOException {
         LinkResult brokenLink = new LinkResult("http://example.com/broken", true);
-        PageResult root = new PageResult(
-                "http://example.com",
-                0,
-                Collections.emptyList(),
-                List.of(brokenLink),
-                Collections.emptyList()
-        );
+        PageResult root = PageResult.builder("http://example.com", 0)
+                .links(List.of(brokenLink))
+                .build();
 
         writer.writeReport(root);
         String content = Files.readString(reportPath);
@@ -138,20 +111,13 @@ class MarkdownWriterTest {
     @Test
     void testNestedPageHasArrowPrefix() throws IOException {
         // depth: root starts at 2 , child at 1
-        PageResult child = new PageResult(
-                "http://example.com/child",
-                1,
-                List.of("# Child Heading"),
-                Collections.emptyList(),
-                Collections.emptyList()
-        );
-        PageResult root = new PageResult(
-                "http://example.com",
-                2,
-                List.of("# Root Heading"),
-                Collections.emptyList(),
-                List.of(child)
-        );
+        PageResult child = PageResult.builder("http://example.com/child", 1)
+                .headings(List.of("# Child Heading"))
+                .build();
+        PageResult root = PageResult.builder("http://example.com", 2)
+                .headings(List.of("# Root Heading"))
+                .childPages(List.of(child))
+                .build();
 
         writer.writeReport(root);
         String content = Files.readString(reportPath);
@@ -165,27 +131,17 @@ class MarkdownWriterTest {
     @Test
     void testDeeplyNestedPageHasDoubleArrowPrefix() throws IOException {
         // (depth 2→1→0), so prefix is "---->"
-        PageResult grandchild = new PageResult(
-                "http://example.com/grand",
-                0,
-                List.of("# Grand Heading"),
-                Collections.emptyList(),
-                Collections.emptyList()
-        );
-        PageResult child = new PageResult(
-                "http://example.com/child",
-                1,
-                List.of("# Child Heading"),
-                Collections.emptyList(),
-                List.of(grandchild)
-        );
-        PageResult root = new PageResult(
-                "http://example.com",
-                2,
-                List.of("# Root Heading"),
-                Collections.emptyList(),
-                List.of(child)
-        );
+        PageResult grandchild = PageResult.builder("http://example.com/grand", 0)
+                .headings(List.of("# Grand Heading"))
+                .build();
+        PageResult child = PageResult.builder("http://example.com/child", 1)
+                .headings(List.of("# Child Heading"))
+                .childPages(List.of(grandchild))
+                .build();
+        PageResult root = PageResult.builder("http://example.com", 2)
+                .headings(List.of("# Root Heading"))
+                .childPages(List.of(child))
+                .build();
 
         writer.writeReport(root);
         String content = Files.readString(reportPath);

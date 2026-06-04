@@ -11,21 +11,14 @@ class PageResultTest {
 
   @Test
   void shouldStoreChildPages() {
-    PageResult childPage = new PageResult(
-        "https://example.com/child",
-        0,
-        List.of("Child Heading"),
-        List.of(),
-        List.of()
-    );
+    PageResult childPage = PageResult.builder("https://example.com/child", 0)
+        .headings(List.of("Child Heading"))
+        .build();
 
-    PageResult parentPage = new PageResult(
-        "https://example.com",
-        1,
-        List.of("Main Heading"),
-        List.of(),
-        List.of(childPage)
-    );
+    PageResult parentPage = PageResult.builder("https://example.com", 1)
+        .headings(List.of("Main Heading"))
+        .childPages(List.of(childPage))
+        .build();
 
     assertEquals("https://example.com", parentPage.getUrl());
     assertEquals(1, parentPage.getDepth());

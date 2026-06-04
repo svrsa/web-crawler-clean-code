@@ -1,5 +1,6 @@
 package at.aau.webcrawler.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PageResult {
@@ -9,12 +10,16 @@ public class PageResult {
   private final List<LinkResult> links;
   private final List<PageResult> childPages;
 
-  public PageResult(String url, int depth, List<String> headings, List<LinkResult> links, List<PageResult> childPages) {
-    this.url = url;
-    this.depth = depth;
-    this.headings = headings;
-    this.links = links;
-    this.childPages = childPages;
+  private PageResult(Builder builder) {
+    this.url = builder.url;
+    this.depth = builder.depth;
+    this.headings = List.copyOf(builder.headings);
+    this.links = List.copyOf(builder.links);
+    this.childPages = List.copyOf(builder.childPages);
+  }
+
+  public static Builder builder(String url, int depth) {
+    return new Builder(url, depth);
   }
 
   public String getUrl() {
@@ -37,7 +42,35 @@ public class PageResult {
     return childPages;
   }
 
-  public void addChildPage(PageResult childPage) {
-    childPages.add(childPage);
+  public static class Builder {
+    private final String url;
+    private final int depth;
+    private List<String> headings = List.of();
+    private List<LinkResult> links = List.of();
+    private List<PageResult> childPages = List.of();
+
+    private Builder(String url, int depth) {
+      this.url = url;
+      this.depth = depth;
+    }
+
+    public Builder headings(List<String> headings) {
+      this.headings = new ArrayList<>(headings);
+      return this;
+    }
+
+    public Builder links(List<LinkResult> links) {
+      this.links = new ArrayList<>(links);
+      return this;
+    }
+
+    public Builder childPages(List<PageResult> childPages) {
+      this.childPages = new ArrayList<>(childPages);
+      return this;
+    }
+
+    public PageResult build() {
+      return new PageResult(this);
+    }
   }
 }

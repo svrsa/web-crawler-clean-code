@@ -62,17 +62,22 @@ public class WebCrawler {
 
     markAsVisited(url);
 
-    PageResult pageResult = analyzeSinglePage(url, depth);
+    PageResult pageResultWithoutChildren = analyzeSinglePage(url, depth);
+    List<PageResult> childPages = new ArrayList<>();
 
     if (depth > 0) {
-      for (LinkResult link : pageResult.getLinks()) {
+      for (LinkResult link : pageResultWithoutChildren.getLinks()) {
         if (shouldFollow(link)) {
-          pageResult.addChildPage(crawlPage(link.getUrl(), depth - 1));
+          childPages.add(crawlPage(link.getUrl(), depth - 1));
         }
       }
     }
 
-    return pageResult;
+    return PageResult.builder(url, depth)
+        .headings(pageResultWithoutChildren.getHeadings())
+        .links(pageResultWithoutChildren.getLinks())
+        .childPages(childPages)
+        .build();
   }
 
   private boolean shouldFollow(LinkResult link) {
@@ -106,7 +111,10 @@ public class WebCrawler {
     List<String> extractedLinks = htmlParser.extractLinks(document);
     List<LinkResult> links = analyzeLinks(extractedLinks);
 
-    return new PageResult(url, depth, headings, links, new ArrayList<>());
+    return PageResult.builder(url, depth)
+        .headings(headings)
+        .links(links)
+        .build();
   }
 
   private List<LinkResult> analyzeLinks(List<String> extractedLinks) {
