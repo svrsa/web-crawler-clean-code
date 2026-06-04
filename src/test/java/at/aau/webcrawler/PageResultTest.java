@@ -10,18 +10,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PageResultTest {
 
   @Test
-  void shouldStoreChildPages() {
-    PageResult childPage = PageResult.builder("https://example.com/child", 0)
-        .headings(List.of("Child Heading"))
+  void shouldStorePageMetadata() {
+    PageResult pageResult = PageResult.builder("https://example.com", 1)
+        .headings(List.of("Main Heading"))
         .build();
 
+    assertEquals("https://example.com", pageResult.getUrl());
+    assertEquals(1, pageResult.getDepth());
+    assertEquals(List.of("Main Heading"), pageResult.getHeadings());
+  }
+
+  @Test
+  void shouldStoreChildPages() {
+    PageResult childPage = PageResult.builder("https://example.com/child", 0).build();
     PageResult parentPage = PageResult.builder("https://example.com", 1)
-        .headings(List.of("Main Heading"))
         .childPages(List.of(childPage))
         .build();
 
-    assertEquals("https://example.com", parentPage.getUrl());
-    assertEquals(1, parentPage.getDepth());
     assertEquals(1, parentPage.getChildPages().size());
     assertEquals("https://example.com/child", parentPage.getChildPages().get(0).getUrl());
   }

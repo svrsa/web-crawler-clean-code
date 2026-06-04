@@ -32,7 +32,7 @@ class MarkdownWriterTest {
     }
 
     @Test
-    void testReportFileIsCreated() {
+    void shouldCreateReportFile() {
         PageResult root = PageResult.builder("http://example.com", 0)
                 .headings(List.of("# Heading 1"))
                 .build();
@@ -43,7 +43,7 @@ class MarkdownWriterTest {
     }
 
     @Test
-    void testReportContainsUrl() throws IOException {
+    void shouldWritePageUrl() throws IOException {
         PageResult root = PageResult.builder("http://example.com", 0)
                 .headings(List.of("# Main Heading"))
                 .build();
@@ -56,7 +56,7 @@ class MarkdownWriterTest {
     }
 
     @Test
-    void testReportContainsDepth() throws IOException {
+    void shouldWritePageDepth() throws IOException {
         PageResult root = PageResult.builder("http://example.com", 2).build();
 
         writer.writeReport(root);
@@ -66,7 +66,7 @@ class MarkdownWriterTest {
     }
 
     @Test
-    void testReportContainsHeadings() throws IOException {
+    void shouldWriteHeadings() throws IOException {
         PageResult root = PageResult.builder("http://example.com", 0)
                 .headings(List.of("# Main Heading", "## Sub Heading"))
                 .build();
@@ -79,7 +79,7 @@ class MarkdownWriterTest {
     }
 
     @Test
-    void testReportContainsWorkingLink() throws IOException {
+    void shouldWriteWorkingLink() throws IOException {
         LinkResult link = new LinkResult("http://example.com/page", false);
         PageResult root = PageResult.builder("http://example.com", 0)
                 .links(List.of(link))
@@ -94,7 +94,7 @@ class MarkdownWriterTest {
     }
 
     @Test
-    void testReportContainsBrokenLink() throws IOException {
+    void shouldWriteBrokenLink() throws IOException {
         LinkResult brokenLink = new LinkResult("http://example.com/broken", true);
         PageResult root = PageResult.builder("http://example.com", 0)
                 .links(List.of(brokenLink))
@@ -109,8 +109,7 @@ class MarkdownWriterTest {
     }
 
     @Test
-    void testNestedPageHasArrowPrefix() throws IOException {
-        // depth: root starts at 2 , child at 1
+    void shouldNotPrefixRootHeading() throws IOException {
         PageResult child = PageResult.builder("http://example.com/child", 1)
                 .headings(List.of("# Child Heading"))
                 .build();
@@ -124,13 +123,26 @@ class MarkdownWriterTest {
 
         assertTrue(content.contains("# Root Heading"),
                 "Root heading should have no arrow prefix");
+    }
+
+    @Test
+    void shouldPrefixNestedPageHeading() throws IOException {
+        PageResult child = PageResult.builder("http://example.com/child", 1)
+                .headings(List.of("# Child Heading"))
+                .build();
+        PageResult root = PageResult.builder("http://example.com", 2)
+                .childPages(List.of(child))
+                .build();
+
+        writer.writeReport(root);
+        String content = Files.readString(reportPath);
+
         assertTrue(content.contains("# --> Child Heading"),
                 "Child heading should have --> prefix");
     }
 
     @Test
-    void testDeeplyNestedPageHasDoubleArrowPrefix() throws IOException {
-        // (depth 2→1→0), so prefix is "---->"
+    void shouldPrefixDeeplyNestedPageHeading() throws IOException {
         PageResult grandchild = PageResult.builder("http://example.com/grand", 0)
                 .headings(List.of("# Grand Heading"))
                 .build();
