@@ -5,6 +5,8 @@ import org.jsoup.Jsoup;
 import java.io.IOException;
 
 public class LinkStatusChecker {
+  private static final int FIRST_HTTP_ERROR_STATUS_CODE = 400;
+
   private final int requestTimeoutMs;
 
   public LinkStatusChecker(int requestTimeoutMs) {
@@ -22,7 +24,7 @@ public class LinkStatusChecker {
           .ignoreHttpErrors(true)
           .execute()
           .statusCode();
-      return statusCode >= 400;
+      return statusCode >= FIRST_HTTP_ERROR_STATUS_CODE;
     } catch (IOException exception) {
       return true;
     }

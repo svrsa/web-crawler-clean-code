@@ -4,17 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ArgumentParser {
+  private static final int EXPECTED_ARGUMENT_COUNT = 3;
+  private static final int URL_ARGUMENT_INDEX = 0;
+  private static final int DEPTH_ARGUMENT_INDEX = 1;
+  private static final int DOMAINS_ARGUMENT_INDEX = 2;
+
   // AI-assisted: the validation structure of this method was discussed with AI.
   // The final implementation was manually adapted and tested.
   public CrawlerConfiguration parse(String[] args) {
-    if (args.length != 3) {
+    if (args.length != EXPECTED_ARGUMENT_COUNT) {
       throw new IllegalArgumentException("Expected exactly 3 arguments: <url> <depth> <domains>");
     }
 
-    String startUrl = args[0];
-    int maxDepth = parseDepth(args[1]);
+    String startUrl = args[URL_ARGUMENT_INDEX];
+    int maxDepth = parseDepth(args[DEPTH_ARGUMENT_INDEX]);
 
-    String[] domainParts = args[2].split(",");
+    String[] domainParts = args[DOMAINS_ARGUMENT_INDEX].split(",");
     List<String> allowedDomains = new ArrayList<>();
 
     for (String domainPart : domainParts) {
