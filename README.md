@@ -46,7 +46,7 @@ The crawler should:
 │   │           │   ├── ArgumentParser.java
 │   │           │   └── CrawlerConfiguration.java
 │   │           ├── crawler/
-│   │           │   ├── CrawlerService.java
+│   │           │   ├── WebCrawler.java
 │   │           │   └── DomainFilter.java
 │   │           ├── model/
 │   │           │   ├── LinkResult.java
@@ -81,8 +81,8 @@ The crawler should:
 - **`CrawlerConfiguration`**  
   Immutable value object holding the parsed crawler settings.
   
-- **`CrawlerService`**  
-  Contains the main crawling logic: recursion, depth handling, duplicate-visit prevention, and broken link detection.
+- **`WebCrawler`**  
+  Holds the crawl configuration and visited-page state while coordinating recursion, depth handling, duplicate-visit prevention, and broken link detection.
   
 - **`DomainFilter`**  
   Decides whether a URL belongs to one of the allowed domains.

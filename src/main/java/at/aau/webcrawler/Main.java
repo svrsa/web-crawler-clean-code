@@ -2,7 +2,7 @@ package at.aau.webcrawler;
 
 import at.aau.webcrawler.config.ArgumentParser;
 import at.aau.webcrawler.config.CrawlerConfiguration;
-import at.aau.webcrawler.crawler.CrawlerService;
+import at.aau.webcrawler.crawler.WebCrawler;
 import at.aau.webcrawler.model.LinkResult;
 import at.aau.webcrawler.model.PageResult;
 import at.aau.webcrawler.writer.MarkdownWriter;
@@ -12,12 +12,11 @@ public class Main {
     ArgumentParser argumentParser = new ArgumentParser();
     CrawlerConfiguration configuration = argumentParser.parse(args);
 
-    CrawlerService crawlerService = new CrawlerService();
-    PageResult pageResult = crawlerService.crawlPage(
-        configuration.getStartUrl(),
+    WebCrawler webCrawler = new WebCrawler(
         configuration.getMaxDepth(),
         configuration.getAllowedDomains()
     );
+    PageResult pageResult = webCrawler.crawl(configuration.getStartUrl());
     new MarkdownWriter().writeReport(pageResult);
     System.out.println("Report wurde als report.md gespeichert.");
     printPageResult(pageResult);

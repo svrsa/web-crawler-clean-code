@@ -2,7 +2,7 @@ package at.aau.webcrawler;
 
 import at.aau.webcrawler.config.ArgumentParser;
 import at.aau.webcrawler.config.CrawlerConfiguration;
-import at.aau.webcrawler.crawler.CrawlerService;
+import at.aau.webcrawler.crawler.WebCrawler;
 import at.aau.webcrawler.model.PageResult;
 import at.aau.webcrawler.writer.MarkdownWriter;
 import com.sun.net.httpserver.HttpServer;
@@ -103,11 +103,10 @@ public class WebCrawlerIntegrationTest {
                 new String[]{startUrl, "2", "localhost"}
         );
 
-        PageResult root = new CrawlerService().crawlPage(
-                config.getStartUrl(),
+        PageResult root = new WebCrawler(
                 config.getMaxDepth(),
                 config.getAllowedDomains()
-        );
+        ).crawl(config.getStartUrl());
 
         Path reportPath = tempDir.resolve("report.md");
         new MarkdownWriter(reportPath).writeReport(root);
