@@ -1,6 +1,7 @@
 package at.aau.webcrawler;
 
 import at.aau.webcrawler.config.ArgumentParser;
+import at.aau.webcrawler.config.CrawlerDefaults;
 import at.aau.webcrawler.config.CrawlerConfiguration;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +22,7 @@ class ArgumentParserTest {
     assertEquals(List.of("https://example.com"), configuration.getStartUrls());
     assertEquals(2, configuration.getMaxDepth());
     assertEquals(2, configuration.getAllowedDomains().size());
+    assertEquals(CrawlerDefaults.THREAD_COUNT, configuration.getThreadCount());
   }
 
   @Test
@@ -76,6 +78,32 @@ class ArgumentParserTest {
   void shouldThrowExceptionWhenStartUrlsAreEmpty() {
     ArgumentParser parser = new ArgumentParser();
     String[] args = {" , ", "1", "example.com"};
+
+    assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
+  }
+
+  @Test
+  void shouldParseThreadCountWhenProvided() {
+    ArgumentParser parser = new ArgumentParser();
+    String[] args = {"https://example.com", "1", "example.com", "4"};
+
+    CrawlerConfiguration configuration = parser.parse(args);
+
+    assertEquals(4, configuration.getThreadCount());
+  }
+
+  @Test
+  void shouldThrowExceptionWhenThreadCountIsNotANumber() {
+    ArgumentParser parser = new ArgumentParser();
+    String[] args = {"https://example.com", "1", "example.com", "many"};
+
+    assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenThreadCountIsNotPositive() {
+    ArgumentParser parser = new ArgumentParser();
+    String[] args = {"https://example.com", "1", "example.com", "0"};
 
     assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
   }

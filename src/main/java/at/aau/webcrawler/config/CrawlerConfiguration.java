@@ -6,11 +6,18 @@ public class CrawlerConfiguration {
   private final List<String> startUrls;
   private final int maxDepth;
   private final List<String> allowedDomains;
+  private final int threadCount;
 
-  public CrawlerConfiguration(List<String> startUrls, int maxDepth, List<String> allowedDomains) {
+  public CrawlerConfiguration(
+      List<String> startUrls,
+      int maxDepth,
+      List<String> allowedDomains,
+      int threadCount
+  ) {
     this.startUrls = List.copyOf(startUrls);
     this.maxDepth = maxDepth;
     this.allowedDomains = List.copyOf(allowedDomains);
+    this.threadCount = threadCount;
   }
 
   public List<String> getStartUrls() {
@@ -23,5 +30,9 @@ public class CrawlerConfiguration {
 
   public List<String> getAllowedDomains() {
     return allowedDomains;
+  }
+
+  public int getThreadCount() {
+    return threadCount;
   }
 }

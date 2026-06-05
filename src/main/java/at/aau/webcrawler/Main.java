@@ -20,7 +20,8 @@ public class Main {
 
     WebCrawler webCrawler = new WebCrawler(
         configuration.getMaxDepth(),
-        configuration.getAllowedDomains()
+        configuration.getAllowedDomains(),
+        configuration.getThreadCount()
     );
     List<PageResult> pageResults = webCrawler.crawl(configuration.getStartUrls());
 

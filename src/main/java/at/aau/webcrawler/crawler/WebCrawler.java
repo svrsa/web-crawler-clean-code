@@ -4,6 +4,7 @@ import at.aau.webcrawler.fetch.JsoupLinkStatusChecker;
 import at.aau.webcrawler.fetch.JsoupPageFetcher;
 import at.aau.webcrawler.fetch.LinkStatusChecker;
 import at.aau.webcrawler.fetch.PageFetcher;
+import at.aau.webcrawler.config.CrawlerDefaults;
 import at.aau.webcrawler.model.PageResult;
 
 import java.util.List;
@@ -12,9 +13,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class WebCrawler {
-  private static final int DEFAULT_THREAD_COUNT = 8;
-  private static final int MINIMUM_THREAD_COUNT = 1;
-
   private final int maxDepth;
   private final List<String> allowedDomains;
   private final Set<String> visitedUrls = CrawlCoordinator.createVisitedUrlSet();
@@ -37,7 +35,7 @@ public class WebCrawler {
       PageFetcher pageFetcher,
       LinkStatusChecker linkStatusChecker
   ) {
-    this(maxDepth, allowedDomains, pageFetcher, linkStatusChecker, DEFAULT_THREAD_COUNT);
+    this(maxDepth, allowedDomains, pageFetcher, linkStatusChecker, CrawlerDefaults.THREAD_COUNT);
   }
 
   public WebCrawler(
@@ -78,7 +76,7 @@ public class WebCrawler {
   }
 
   private int validateThreadCount(int threadCount) {
-    if (threadCount < MINIMUM_THREAD_COUNT) {
+    if (threadCount < CrawlerDefaults.MINIMUM_THREAD_COUNT) {
       throw new IllegalArgumentException("Thread count must be positive");
     }
     return threadCount;
