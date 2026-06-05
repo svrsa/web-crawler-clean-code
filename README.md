@@ -48,11 +48,16 @@ The crawler should:
 │   │           ├── crawler/
 │   │           │   ├── WebCrawler.java
 │   │           │   └── DomainFilter.java
+│   │           ├── fetch/
+│   │           │   ├── PageFetcher.java
+│   │           │   ├── PageContent.java
+│   │           │   ├── LinkStatusChecker.java
+│   │           │   ├── PageLoadException.java
+│   │           │   ├── JsoupPageFetcher.java
+│   │           │   └── JsoupLinkStatusChecker.java
 │   │           ├── model/
 │   │           │   ├── LinkResult.java
 │   │           │   └── PageResult.java
-│   │           ├── parser/
-│   │           │   └── HtmlParser.java
 │   │           └── writer/
 │   │               ├── MarkdownWriter.java
 │   │               └── ReportWriteException.java
@@ -61,11 +66,14 @@ The crawler should:
 │           └── at/aau/webcrawler/
 │               ├── ArgumentParserTest.java
 │               ├── DomainFilterTest.java
-│               ├── HtmlParserTest.java
 │               ├── LinkResultTest.java
 │               ├── MarkdownWriterTest.java
 │               ├── PageResultTest.java
-│               └── WebCrawlerIntegrationTest.java
+│               ├── WebCrawlerIntegrationTest.java
+│               ├── WebCrawlerTest.java
+│               └── fetch/
+│                   ├── JsoupPageFetcherTest.java
+│                   └── JsoupLinkStatusCheckerTest.java
 ├── pom.xml
 └── README.md
 ```
@@ -86,18 +94,24 @@ The crawler should:
   
 - **`DomainFilter`**  
   Decides whether a URL belongs to one of the allowed domains.
-  
-- **`HtmlParser`**  
-  Extracts headings (with Markdown `#` prefix) and absolute links from HTML documents via jsoup.
-  
+
+- **`fetch` package**  
+  Boundary toward third-party HTML libraries. `PageFetcher` and `LinkStatusChecker` are
+  pure interfaces; `PageContent` and `PageLoadException` are the library-agnostic data
+  and error types. `JsoupPageFetcher` and `JsoupLinkStatusChecker` are the only main
+  classes that import `org.jsoup.*` — swapping jsoup means replacing this package.
+
 - **`MarkdownWriter`**  
   Generates the final `report.md`. Accepts an optional `Path` via constructor for testability (DIP).
-  
+  Renders failed pages as a clearly marked `**error:**` block instead of crashing the report.
+
 - **`ReportWriteException`**  
   Dedicated unchecked exception thrown when the report cannot be written.
-  
+
 - **`model` package**  
   `PageResult` and `LinkResult` store the crawled data as plain value objects.
+  `PageResult.error(url, depth, message)` produces a result for failed page loads;
+  callers use `hasError()` / `getErrorMessage()` to discriminate.
 
 ## Report Format
  
