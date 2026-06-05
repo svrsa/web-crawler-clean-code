@@ -161,4 +161,38 @@ class MarkdownWriterTest {
         assertTrue(content.contains("# ----> Grand Heading"),
                 "Grandchild heading should have ----> prefix");
     }
+
+    @Test
+    void shouldWriteErrorBlockForFailedPage() throws IOException {
+        PageResult root = PageResult.error("http://example.com/broken", 0, "timeout after 5000ms");
+
+        writer.writeReport(root);
+        String content = Files.readString(reportPath);
+
+        assertTrue(content.contains("<a>[http://example.com/broken](http://example.com/broken)</a>"),
+                "Error page should still include the URL header");
+        assertTrue(content.contains("<br>**error:** timeout after 5000ms"),
+                "Error message should be rendered as a clearly marked block");
+    }
+
+    @Test
+    void shouldStillRenderSiblingsWhenOneChildPageFailed() throws IOException {
+        PageResult failingChild = PageResult.error("http://example.com/down", 1, "host unreachable");
+        PageResult workingChild = PageResult.builder("http://example.com/ok", 1)
+                .headings(List.of("# Ok"))
+                .build();
+        PageResult root = PageResult.builder("http://example.com", 2)
+                .headings(List.of("# Root"))
+                .childPages(List.of(failingChild, workingChild))
+                .build();
+
+        writer.writeReport(root);
+        String content = Files.readString(reportPath);
+
+        assertTrue(content.contains("# Root"), "Root heading must still be present");
+        assertTrue(content.contains("<br>**error:** host unreachable"),
+                "Failed child page must render its error block");
+        assertTrue(content.contains("# --> Ok"),
+                "Working sibling must still render with depth prefix");
+    }
 }

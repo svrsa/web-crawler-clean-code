@@ -1,21 +1,23 @@
 package at.aau.webcrawler;
 
-import at.aau.webcrawler.crawler.HtmlDocumentFetcher;
-import at.aau.webcrawler.crawler.LinkStatusChecker;
 import at.aau.webcrawler.crawler.WebCrawler;
+import at.aau.webcrawler.fetch.LinkStatusChecker;
+import at.aau.webcrawler.fetch.PageContent;
+import at.aau.webcrawler.fetch.PageFetcher;
+import at.aau.webcrawler.fetch.PageLoadException;
 import at.aau.webcrawler.model.LinkResult;
 import at.aau.webcrawler.model.PageResult;
-import at.aau.webcrawler.parser.HtmlParser;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -23,17 +25,12 @@ class WebCrawlerTest {
 
   @Test
   void shouldExtractPageDataFromStartUrl() {
-    FakeDocumentFetcher documentFetcher = new FakeDocumentFetcher()
-        .addPage("https://example.com", """
-            <html>
-              <body>
-                <h1>Start</h1>
-                <a href="https://example.com/about">About</a>
-              </body>
-            </html>
-            """);
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com",
+            List.of("# Start"),
+            List.of("https://example.com/about"));
 
-    PageResult result = createCrawler(0, documentFetcher).crawl("https://example.com");
+    PageResult result = createCrawler(0, pageFetcher).crawl("https://example.com");
 
     assertEquals("https://example.com", result.getUrl());
     assertEquals(0, result.getDepth());
@@ -43,15 +40,11 @@ class WebCrawlerTest {
 
   @Test
   void shouldCrawlAllowedLinksWithinDepth() {
-    FakeDocumentFetcher documentFetcher = new FakeDocumentFetcher()
-        .addPage("https://example.com", """
-            <html><body><a href="https://example.com/about">About</a></body></html>
-            """)
-        .addPage("https://example.com/about", """
-            <html><body><h2>About</h2></body></html>
-            """);
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com", List.of(), List.of("https://example.com/about"))
+        .addPage("https://example.com/about", List.of("## About"), List.of());
 
-    PageResult result = createCrawler(1, documentFetcher).crawl("https://example.com");
+    PageResult result = createCrawler(1, pageFetcher).crawl("https://example.com");
 
     assertEquals(1, result.getChildPages().size());
     assertEquals("https://example.com/about", result.getChildPages().get(0).getUrl());
@@ -60,84 +53,63 @@ class WebCrawlerTest {
 
   @Test
   void shouldStopAtConfiguredDepth() {
-    FakeDocumentFetcher documentFetcher = new FakeDocumentFetcher()
-        .addPage("https://example.com", """
-            <html><body><a href="https://example.com/about">About</a></body></html>
-            """)
-        .addPage("https://example.com/about", """
-            <html><body><a href="https://example.com/team">Team</a></body></html>
-            """)
-        .addPage("https://example.com/team", """
-            <html><body><h2>Team</h2></body></html>
-            """);
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com", List.of(), List.of("https://example.com/about"))
+        .addPage("https://example.com/about", List.of(), List.of("https://example.com/team"))
+        .addPage("https://example.com/team", List.of("## Team"), List.of());
 
-    PageResult result = createCrawler(1, documentFetcher).crawl("https://example.com");
+    PageResult result = createCrawler(1, pageFetcher).crawl("https://example.com");
 
     assertEquals(1, result.getChildPages().size());
     assertTrue(result.getChildPages().get(0).getChildPages().isEmpty());
-    assertEquals(0, documentFetcher.fetchCount("https://example.com/team"));
+    assertEquals(0, pageFetcher.fetchCount("https://example.com/team"));
   }
 
   @Test
   void shouldNotFollowDisallowedDomains() {
-    FakeDocumentFetcher documentFetcher = new FakeDocumentFetcher()
-        .addPage("https://example.com", """
-            <html><body><a href="https://other.com/page">Other</a></body></html>
-            """)
-        .addPage("https://other.com/page", """
-            <html><body><h2>Other</h2></body></html>
-            """);
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com", List.of(), List.of("https://other.com/page"))
+        .addPage("https://other.com/page", List.of("## Other"), List.of());
 
-    PageResult result = createCrawler(1, documentFetcher).crawl("https://example.com");
+    PageResult result = createCrawler(1, pageFetcher).crawl("https://example.com");
 
     assertTrue(result.getChildPages().isEmpty());
-    assertEquals(0, documentFetcher.fetchCount("https://other.com/page"));
+    assertEquals(0, pageFetcher.fetchCount("https://other.com/page"));
   }
 
   @Test
   void shouldNotFollowBrokenLinks() {
-    FakeDocumentFetcher documentFetcher = new FakeDocumentFetcher()
-        .addPage("https://example.com", """
-            <html><body><a href="https://example.com/missing">Missing</a></body></html>
-            """)
-        .addPage("https://example.com/missing", """
-            <html><body><h2>Missing</h2></body></html>
-            """);
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com", List.of(), List.of("https://example.com/missing"))
+        .addPage("https://example.com/missing", List.of("## Missing"), List.of());
     FakeLinkStatusChecker linkStatusChecker = new FakeLinkStatusChecker()
         .markBroken("https://example.com/missing");
 
-    PageResult result = createCrawler(1, documentFetcher, linkStatusChecker).crawl("https://example.com");
+    PageResult result = createCrawler(1, pageFetcher, linkStatusChecker).crawl("https://example.com");
 
     assertTrue(result.getLinks().get(0).isBroken());
     assertTrue(result.getChildPages().isEmpty());
-    assertEquals(0, documentFetcher.fetchCount("https://example.com/missing"));
+    assertEquals(0, pageFetcher.fetchCount("https://example.com/missing"));
   }
 
   @Test
   void shouldVisitDuplicateLinksOnlyOnce() {
-    FakeDocumentFetcher documentFetcher = new FakeDocumentFetcher()
-        .addPage("https://example.com", """
-            <html>
-              <body>
-                <a href="https://example.com/about">About</a>
-                <a href="https://example.com/about">About again</a>
-              </body>
-            </html>
-            """)
-        .addPage("https://example.com/about", """
-            <html><body><h2>About</h2></body></html>
-            """);
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com",
+            List.of(),
+            List.of("https://example.com/about", "https://example.com/about"))
+        .addPage("https://example.com/about", List.of("## About"), List.of());
 
-    PageResult result = createCrawler(1, documentFetcher).crawl("https://example.com");
+    PageResult result = createCrawler(1, pageFetcher).crawl("https://example.com");
 
     assertEquals(1, result.getLinks().size());
     assertEquals(1, result.getChildPages().size());
-    assertEquals(1, documentFetcher.fetchCount("https://example.com/about"));
+    assertEquals(1, pageFetcher.fetchCount("https://example.com/about"));
   }
 
   @Test
   void shouldRejectDisallowedStartUrl() {
-    WebCrawler webCrawler = new WebCrawler(0, List.of("example.com"));
+    WebCrawler webCrawler = new WebCrawler(0, List.of("example.com"), new FakePageFetcher(), new FakeLinkStatusChecker());
 
     assertThrows(
         IllegalArgumentException.class,
@@ -145,20 +117,62 @@ class WebCrawlerTest {
     );
   }
 
-  private WebCrawler createCrawler(int maxDepth, FakeDocumentFetcher documentFetcher) {
-    return createCrawler(maxDepth, documentFetcher, new FakeLinkStatusChecker());
+  // AI-assisted: the error-recovery test setup (failing fetcher + assertions on PageResult.hasError)
+  // was discussed with AI. The final test structure was manually adapted and validated.
+  @Test
+  void shouldRecordPageLoadErrorWithoutCrashing() {
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .failOn("https://example.com", "timeout after 5000ms");
+
+    PageResult result = createCrawler(0, pageFetcher).crawl("https://example.com");
+
+    assertTrue(result.hasError());
+    assertEquals("timeout after 5000ms", result.getErrorMessage());
+    assertTrue(result.getHeadings().isEmpty());
+    assertTrue(result.getLinks().isEmpty());
+    assertTrue(result.getChildPages().isEmpty());
+  }
+
+  @Test
+  void shouldKeepSiblingResultsWhenSinglePageFails() {
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com",
+            List.of("# Root"),
+            List.of("https://example.com/ok", "https://example.com/broken-fetch"))
+        .addPage("https://example.com/ok", List.of("## Ok"), List.of())
+        .failOn("https://example.com/broken-fetch", "host unreachable");
+
+    PageResult result = createCrawler(1, pageFetcher).crawl("https://example.com");
+
+    assertFalse(result.hasError());
+    assertEquals(2, result.getChildPages().size());
+    PageResult ok = childByUrl(result, "https://example.com/ok");
+    PageResult failed = childByUrl(result, "https://example.com/broken-fetch");
+    assertFalse(ok.hasError());
+    assertTrue(failed.hasError());
+    assertEquals("host unreachable", failed.getErrorMessage());
+  }
+
+  private PageResult childByUrl(PageResult parent, String url) {
+    return parent.getChildPages().stream()
+        .filter(child -> child.getUrl().equals(url))
+        .findFirst()
+        .orElseThrow();
+  }
+
+  private WebCrawler createCrawler(int maxDepth, FakePageFetcher pageFetcher) {
+    return createCrawler(maxDepth, pageFetcher, new FakeLinkStatusChecker());
   }
 
   private WebCrawler createCrawler(
       int maxDepth,
-      FakeDocumentFetcher documentFetcher,
+      FakePageFetcher pageFetcher,
       FakeLinkStatusChecker linkStatusChecker
   ) {
     return new WebCrawler(
         maxDepth,
         List.of("example.com"),
-        documentFetcher,
-        new HtmlParser(),
+        pageFetcher,
         linkStatusChecker
     );
   }
@@ -169,23 +183,32 @@ class WebCrawlerTest {
         .toList();
   }
 
-  private static class FakeDocumentFetcher extends HtmlDocumentFetcher {
-    private final Map<String, Document> documents = new HashMap<>();
+  private static class FakePageFetcher implements PageFetcher {
+    private final Map<String, PageContent> pages = new HashMap<>();
+    private final Map<String, String> failures = new HashMap<>();
     private final Map<String, Integer> fetchCounts = new HashMap<>();
 
-    FakeDocumentFetcher() {
-      super(0);
+    FakePageFetcher addPage(String url, List<String> headings, List<String> links) {
+      pages.put(url, new PageContent(new ArrayList<>(headings), new ArrayList<>(links)));
+      return this;
     }
 
-    FakeDocumentFetcher addPage(String url, String html) {
-      documents.put(url, Jsoup.parse(html, url));
+    FakePageFetcher failOn(String url, String message) {
+      failures.put(url, message);
       return this;
     }
 
     @Override
-    public Optional<Document> fetch(String url) {
+    public PageContent fetch(String url) throws PageLoadException {
       fetchCounts.merge(url, 1, Integer::sum);
-      return Optional.ofNullable(documents.get(url));
+      if (failures.containsKey(url)) {
+        throw new PageLoadException(failures.get(url));
+      }
+      PageContent content = pages.get(url);
+      if (content == null) {
+        throw new PageLoadException("No page registered for " + url);
+      }
+      return content;
     }
 
     int fetchCount(String url) {
@@ -193,12 +216,8 @@ class WebCrawlerTest {
     }
   }
 
-  private static class FakeLinkStatusChecker extends LinkStatusChecker {
-    private final List<String> brokenUrls = new java.util.ArrayList<>();
-
-    FakeLinkStatusChecker() {
-      super(0);
-    }
+  private static class FakeLinkStatusChecker implements LinkStatusChecker {
+    private final Set<String> brokenUrls = new HashSet<>();
 
     FakeLinkStatusChecker markBroken(String url) {
       brokenUrls.add(url);
