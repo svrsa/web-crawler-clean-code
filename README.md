@@ -6,7 +6,7 @@ A Java-based web crawler that creates a compact markdown overview of a given web
 
 The goal of this project is to implement a command-line web crawler in Java for the Clean Code assignment.
 
-The crawler starts from a given URL, extracts headings and links from the website, and recursively follows allowed links up to a specified depth. The final result is written into a single markdown report file.
+The crawler starts from one or more given URLs, extracts headings and links from each website, and follows allowed links up to a specified depth. Page loads are processed concurrently with a configurable thread pool. The final result is written into a single markdown report file.
 
 The project focuses on clean code, maintainability, and automated testing.
 
@@ -14,10 +14,11 @@ The project focuses on clean code, maintainability, and automated testing.
 
 The crawler should:
 
-- accept a start URL, crawl depth, and allowed domain(s) as command-line arguments
+- accept start URL(s), crawl depth, allowed domain(s), and an optional thread count as command-line arguments
 - extract headings (`h1` to `h6`)
 - extract links (`a[href]`)
 - recursively crawl linked pages within the allowed depth
+- process pages concurrently with a fixed-size thread pool
 - only follow links that belong to one of the allowed domains
 - avoid visiting the same page more than once
 - detect broken links
@@ -47,6 +48,9 @@ The crawler should:
 │   │           │   └── CrawlerConfiguration.java
 │   │           ├── crawler/
 │   │           │   ├── WebCrawler.java
+│   │           │   ├── CrawlCoordinator.java
+│   │           │   ├── CrawlTask.java
+│   │           │   ├── CrawledPage.java
 │   │           │   └── DomainFilter.java
 │   │           ├── fetch/
 │   │           │   ├── PageFetcher.java
@@ -90,7 +94,17 @@ The crawler should:
   Immutable value object holding the parsed crawler settings.
   
 - **`WebCrawler`**  
-  Holds the crawl configuration and visited-page state while coordinating recursion, depth handling, duplicate-visit prevention, and broken link detection.
+  Holds the crawl configuration and starts the concurrent crawl with a fixed-size thread pool.
+  The default thread count is `8`, but it can be overridden via the optional CLI argument.
+
+- **`CrawlCoordinator`**  
+  Coordinates submitted crawl tasks, tracks pending work, submits discovered child pages, and reconstructs the final parent/child tree after all tasks have completed.
+
+- **`CrawlTask`**  
+  Processes one page: fetches page content, extracts link status, records page-load errors, and returns a library-agnostic `CrawledPage`.
+
+- **`CrawledPage`**  
+  Internal immutable record used while concurrent crawl results are collected before building final `PageResult` objects.
   
 - **`DomainFilter`**  
   Decides whether a URL belongs to one of the allowed domains.
@@ -231,6 +245,29 @@ Example with multiple domains:
 java -jar target/web-crawler-clean-code-1.0-SNAPSHOT.jar https://example.com 2 example.com,example.org
 ```
 
+Example with multiple start URLs:
+
+```bash
+java -jar target/web-crawler-clean-code-1.0-SNAPSHOT.jar https://example.com,https://example.org 2 example.com,example.org
+```
+
+Example with an explicit thread count:
+
+```bash
+java -jar target/web-crawler-clean-code-1.0-SNAPSHOT.jar https://example.com,https://example.org 2 example.com,example.org 4
+```
+
+Arguments:
+
+```text
+<urls> <depth> <domains> [threads]
+```
+
+- `urls`: one or more comma-separated start URLs
+- `depth`: maximum crawl depth
+- `domains`: one or more comma-separated allowed domains
+- `threads`: optional positive integer; defaults to `8`
+
 ## Testing
 
 Planned test areas include:
@@ -242,6 +279,9 @@ Planned test areas include:
 - depth handling
 - duplicate-visit prevention
 - broken link detection
+- page-load error handling
+- concurrent crawling
+- multiple start URLs
 - markdown generation
 
 ## Workflow
@@ -271,6 +311,8 @@ Examples:
 - each website should only be crawled once
 - recursion must stop at the given depth
 - only allowed domains should be followed
+- crawl tasks must not wait for child tasks inside worker threads
+- failed page loads should be logged and rendered in the report instead of stopping the whole crawl
 - broken links should be clearly highlighted in the markdown report
 - code should remain clean, readable, and modular
 
