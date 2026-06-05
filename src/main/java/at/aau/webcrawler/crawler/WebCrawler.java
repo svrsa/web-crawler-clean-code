@@ -13,12 +13,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WebCrawler {
 
   private final int maxDepth;
   private final List<String> allowedDomains;
-  private final Set<String> visitedUrls = new HashSet<>();
+  private final Set<String> visitedUrls = ConcurrentHashMap.newKeySet();
   private final DomainFilter domainFilter = new DomainFilter();
   private final PageFetcher pageFetcher;
   private final LinkStatusChecker linkStatusChecker;
@@ -50,11 +51,9 @@ public class WebCrawler {
       throw new IllegalArgumentException("URL is not in an allowed domain: " + url);
     }
 
-    if (hasVisited(url)) {
+    if (!tryMarkAsVisited(url)) {
       throw new IllegalArgumentException("URL has already been visited: " + url);
     }
-
-    markAsVisited(url);
 
     PageContent content;
     try {
@@ -96,8 +95,8 @@ public class WebCrawler {
     return visitedUrls.contains(url);
   }
 
-  private void markAsVisited(String url) {
-    visitedUrls.add(url);
+  private boolean tryMarkAsVisited(String url) {
+    return visitedUrls.add(url);
   }
 
   private List<LinkResult> analyzeLinks(List<String> extractedLinks) {

@@ -108,6 +108,21 @@ class WebCrawlerTest {
   }
 
   @Test
+  void shouldRejectAlreadyVisitedUrl() {
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com", List.of("# Start"), List.of());
+    WebCrawler webCrawler = createCrawler(0, pageFetcher);
+
+    webCrawler.crawl("https://example.com");
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> webCrawler.crawl("https://example.com")
+    );
+    assertEquals(1, pageFetcher.fetchCount("https://example.com"));
+  }
+
+  @Test
   void shouldRejectDisallowedStartUrl() {
     WebCrawler webCrawler = new WebCrawler(0, List.of("example.com"), new FakePageFetcher(), new FakeLinkStatusChecker());
 
