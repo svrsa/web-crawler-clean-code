@@ -1,6 +1,7 @@
 package at.aau.webcrawler;
 
 import at.aau.webcrawler.crawler.WebCrawler;
+import at.aau.webcrawler.config.CrawlerDefaults;
 import at.aau.webcrawler.fetch.LinkStatusChecker;
 import at.aau.webcrawler.fetch.PageContent;
 import at.aau.webcrawler.fetch.PageFetcher;
@@ -22,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WebCrawlerTest {
+  private static final int TWO_START_URLS = 2;
+  private static final int CONCURRENT_THREAD_COUNT = 2;
+  private static final int FETCH_DELAY_MS = 100;
 
   @Test
   void shouldExtractPageDataFromStartUrl() {
@@ -133,10 +137,10 @@ class WebCrawlerTest {
         List.of("example.com", "example.org"),
         pageFetcher,
         new FakeLinkStatusChecker(),
-        2
+        CONCURRENT_THREAD_COUNT
     ).crawl(List.of("https://example.com", "https://example.org"));
 
-    assertEquals(2, results.size());
+    assertEquals(TWO_START_URLS, results.size());
     assertEquals("https://example.com", results.get(0).getUrl());
     assertEquals("https://example.org", results.get(1).getUrl());
     assertEquals(1, pageFetcher.fetchCount("https://example.com"));
@@ -148,18 +152,18 @@ class WebCrawlerTest {
     FakePageFetcher pageFetcher = new FakePageFetcher()
         .addPage("https://example.com", List.of("# First"), List.of())
         .addPage("https://example.org", List.of("# Second"), List.of())
-        .delayFetchesBy(100);
+        .delayFetchesBy(FETCH_DELAY_MS);
 
     createCrawler(
         0,
         List.of("example.com", "example.org"),
         pageFetcher,
         new FakeLinkStatusChecker(),
-        2
+        CONCURRENT_THREAD_COUNT
     ).crawl(List.of("https://example.com", "https://example.org"));
 
     assertTrue(
-        pageFetcher.maxConcurrentFetches() >= 2,
+        pageFetcher.maxConcurrentFetches() >= TWO_START_URLS,
         "At least two pages should have been fetched at the same time"
     );
   }
@@ -210,7 +214,7 @@ class WebCrawlerTest {
     PageResult result = createCrawler(1, pageFetcher).crawl("https://example.com");
 
     assertFalse(result.hasError());
-    assertEquals(2, result.getChildPages().size());
+    assertEquals(TWO_START_URLS, result.getChildPages().size());
     PageResult ok = childByUrl(result, "https://example.com/ok");
     PageResult failed = childByUrl(result, "https://example.com/broken-fetch");
     assertFalse(ok.hasError());
@@ -234,7 +238,13 @@ class WebCrawlerTest {
       FakePageFetcher pageFetcher,
       FakeLinkStatusChecker linkStatusChecker
   ) {
-    return createCrawler(maxDepth, List.of("example.com"), pageFetcher, linkStatusChecker, 8);
+    return createCrawler(
+        maxDepth,
+        List.of("example.com"),
+        pageFetcher,
+        linkStatusChecker,
+        CrawlerDefaults.THREAD_COUNT
+    );
   }
 
   private WebCrawler createCrawler(
