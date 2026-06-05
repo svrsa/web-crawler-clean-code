@@ -10,11 +10,11 @@ import at.aau.webcrawler.model.PageResult;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -123,12 +123,62 @@ class WebCrawlerTest {
   }
 
   @Test
+  void shouldCrawlMultipleStartUrlsInOneRun() {
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com", List.of("# First"), List.of())
+        .addPage("https://example.org", List.of("# Second"), List.of());
+
+    List<PageResult> results = createCrawler(
+        0,
+        List.of("example.com", "example.org"),
+        pageFetcher,
+        new FakeLinkStatusChecker(),
+        2
+    ).crawl(List.of("https://example.com", "https://example.org"));
+
+    assertEquals(2, results.size());
+    assertEquals("https://example.com", results.get(0).getUrl());
+    assertEquals("https://example.org", results.get(1).getUrl());
+    assertEquals(1, pageFetcher.fetchCount("https://example.com"));
+    assertEquals(1, pageFetcher.fetchCount("https://example.org"));
+  }
+
+  @Test
+  void shouldFetchStartUrlsConcurrently() {
+    FakePageFetcher pageFetcher = new FakePageFetcher()
+        .addPage("https://example.com", List.of("# First"), List.of())
+        .addPage("https://example.org", List.of("# Second"), List.of())
+        .delayFetchesBy(100);
+
+    createCrawler(
+        0,
+        List.of("example.com", "example.org"),
+        pageFetcher,
+        new FakeLinkStatusChecker(),
+        2
+    ).crawl(List.of("https://example.com", "https://example.org"));
+
+    assertTrue(
+        pageFetcher.maxConcurrentFetches() >= 2,
+        "At least two pages should have been fetched at the same time"
+    );
+  }
+
+  @Test
   void shouldRejectDisallowedStartUrl() {
     WebCrawler webCrawler = new WebCrawler(0, List.of("example.com"), new FakePageFetcher(), new FakeLinkStatusChecker());
 
     assertThrows(
         IllegalArgumentException.class,
         () -> webCrawler.crawl("https://other.com")
+    );
+  }
+
+  @Test
+  void shouldRejectInvalidThreadCount() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WebCrawler(0, List.of("example.com"), new FakePageFetcher(), new FakeLinkStatusChecker(), 0)
     );
   }
 
@@ -184,11 +234,22 @@ class WebCrawlerTest {
       FakePageFetcher pageFetcher,
       FakeLinkStatusChecker linkStatusChecker
   ) {
+    return createCrawler(maxDepth, List.of("example.com"), pageFetcher, linkStatusChecker, 8);
+  }
+
+  private WebCrawler createCrawler(
+      int maxDepth,
+      List<String> allowedDomains,
+      FakePageFetcher pageFetcher,
+      FakeLinkStatusChecker linkStatusChecker,
+      int threadCount
+  ) {
     return new WebCrawler(
         maxDepth,
-        List.of("example.com"),
+        allowedDomains,
         pageFetcher,
-        linkStatusChecker
+        linkStatusChecker,
+        threadCount
     );
   }
 
@@ -199,9 +260,12 @@ class WebCrawlerTest {
   }
 
   private static class FakePageFetcher implements PageFetcher {
-    private final Map<String, PageContent> pages = new HashMap<>();
-    private final Map<String, String> failures = new HashMap<>();
-    private final Map<String, Integer> fetchCounts = new HashMap<>();
+    private final Map<String, PageContent> pages = new ConcurrentHashMap<>();
+    private final Map<String, String> failures = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> fetchCounts = new ConcurrentHashMap<>();
+    private final AtomicInteger activeFetches = new AtomicInteger();
+    private final AtomicInteger maxConcurrentFetches = new AtomicInteger();
+    private long fetchDelayMs;
 
     FakePageFetcher addPage(String url, List<String> headings, List<String> links) {
       pages.put(url, new PageContent(new ArrayList<>(headings), new ArrayList<>(links)));
@@ -213,26 +277,55 @@ class WebCrawlerTest {
       return this;
     }
 
+    FakePageFetcher delayFetchesBy(long fetchDelayMs) {
+      this.fetchDelayMs = fetchDelayMs;
+      return this;
+    }
+
     @Override
     public PageContent fetch(String url) throws PageLoadException {
-      fetchCounts.merge(url, 1, Integer::sum);
-      if (failures.containsKey(url)) {
-        throw new PageLoadException(failures.get(url));
+      int activeFetchCount = activeFetches.incrementAndGet();
+      maxConcurrentFetches.updateAndGet(previous -> Math.max(previous, activeFetchCount));
+
+      try {
+        fetchCounts.computeIfAbsent(url, ignored -> new AtomicInteger()).incrementAndGet();
+        sleepBeforeReturning();
+        if (failures.containsKey(url)) {
+          throw new PageLoadException(failures.get(url));
+        }
+        PageContent content = pages.get(url);
+        if (content == null) {
+          throw new PageLoadException("No page registered for " + url);
+        }
+        return content;
+      } finally {
+        activeFetches.decrementAndGet();
       }
-      PageContent content = pages.get(url);
-      if (content == null) {
-        throw new PageLoadException("No page registered for " + url);
+    }
+
+    private void sleepBeforeReturning() throws PageLoadException {
+      if (fetchDelayMs <= 0) {
+        return;
       }
-      return content;
+      try {
+        Thread.sleep(fetchDelayMs);
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+        throw new PageLoadException("Interrupted while fetching page", exception);
+      }
     }
 
     int fetchCount(String url) {
-      return fetchCounts.getOrDefault(url, 0);
+      return fetchCounts.getOrDefault(url, new AtomicInteger()).get();
+    }
+
+    int maxConcurrentFetches() {
+      return maxConcurrentFetches.get();
     }
   }
 
   private static class FakeLinkStatusChecker implements LinkStatusChecker {
-    private final Set<String> brokenUrls = new HashSet<>();
+    private final Set<String> brokenUrls = ConcurrentHashMap.newKeySet();
 
     FakeLinkStatusChecker markBroken(String url) {
       brokenUrls.add(url);
