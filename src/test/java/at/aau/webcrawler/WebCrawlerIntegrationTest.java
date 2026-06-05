@@ -2,7 +2,7 @@ package at.aau.webcrawler;
 
 import at.aau.webcrawler.config.ArgumentParser;
 import at.aau.webcrawler.config.CrawlerConfiguration;
-import at.aau.webcrawler.crawler.CrawlerService;
+import at.aau.webcrawler.crawler.WebCrawler;
 import at.aau.webcrawler.model.PageResult;
 import at.aau.webcrawler.writer.MarkdownWriter;
 import com.sun.net.httpserver.HttpServer;
@@ -91,52 +91,51 @@ public class WebCrawlerIntegrationTest {
 
     @AfterEach
     void stopServer() {
-        server.stop(0);
+        if (server != null) {
+            server.stop(0);
+        }
         // tempDir and its contents are cleaned up automatically by @TempDir
     }
 
     @Test
-    void testCrawlAndGenerateReport() throws IOException {
+    void shouldCrawlAndGenerateReport() throws IOException {
         String startUrl = "http://localhost:" + port + "/";
+        Path reportPath = tempDir.resolve("report.md");
 
+        crawlAndWriteReport(startUrl, reportPath);
+
+        assertTrue(Files.exists(reportPath), "report.md must exist");
+        String content = Files.readString(reportPath);
+        assertReportContainsCrawledPages(content, startUrl);
+        assertReportContainsLinkStatus(content);
+    }
+
+    private void crawlAndWriteReport(String startUrl, Path reportPath) {
         CrawlerConfiguration config = new ArgumentParser().parse(
                 new String[]{startUrl, "2", "localhost"}
         );
-
-        PageResult root = new CrawlerService().crawlPage(
-                config.getStartUrl(),
+        PageResult root = new WebCrawler(
                 config.getMaxDepth(),
                 config.getAllowedDomains()
-        );
+        ).crawl(config.getStartUrl());
 
-        Path reportPath = tempDir.resolve("report.md");
         new MarkdownWriter(reportPath).writeReport(root);
+    }
 
-        assertTrue(Files.exists(reportPath), "report.md must exist");
-
-        String content = Files.readString(reportPath);
-
-        // Root URL rendered as anchor
+    private void assertReportContainsCrawledPages(String content, String startUrl) {
         assertTrue(content.contains("<a>[" + startUrl + "](" + startUrl + ")</a>"),
                 "Root URL should be present in anchor format");
-
-        // Depth label present
         assertTrue(content.contains("<br>depth:"),
                 "Depth label should be present");
-
-        // Root heading — no arrow prefix at root level
         assertTrue(content.contains("# Welcome"),
                 "Root h1 heading should be present without arrow");
-
-        // Child heading — one level deep, so prefixed with "-->"
         assertTrue(content.contains("## --> Child Heading"),
                 "Child h2 heading should appear with --> prefix");
+    }
 
-        // Broken link uses "broken link" label
+    private void assertReportContainsLinkStatus(String content) {
         assertTrue(content.contains("broken link"),
                 "Broken link should be labeled 'broken link'");
-
-        // Working link uses "link to" label
         assertTrue(content.contains("link to"),
                 "Working link should be labeled 'link to'");
     }
