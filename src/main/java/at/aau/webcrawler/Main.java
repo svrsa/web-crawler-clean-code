@@ -25,6 +25,13 @@ public class Main {
   private static void printPageResult(PageResult pageResult) {
     System.out.println("URL: " + pageResult.getUrl());
     System.out.println("Depth: " + pageResult.getDepth());
+
+    if (pageResult.hasError()) {
+      System.out.println("Error: " + pageResult.getErrorMessage());
+      System.out.println();
+      return;
+    }
+
     System.out.println("Headings: " + pageResult.getHeadings());
 
     System.out.println("Links:");

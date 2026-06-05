@@ -36,9 +36,14 @@ public class MarkdownWriter {
     // AI-assisted: the page-writing structure and method structure were discussed with AI.
     // The final implementation was manually adapted and tested.
     private void writePage(PageResult page, int rootDepth, Writer writer) throws IOException {
-        String arrowPrefix = buildArrowPrefix(rootDepth, page.getDepth());
-
         writePageHeader(page, writer);
+
+        if (page.hasError()) {
+            writeError(page, writer);
+            return;
+        }
+
+        String arrowPrefix = buildArrowPrefix(rootDepth, page.getDepth());
         writeHeadings(page, arrowPrefix, writer);
         writeLinks(page, arrowPrefix, writer);
         writeChildPages(page, rootDepth, writer);
@@ -47,6 +52,10 @@ public class MarkdownWriter {
     private void writePageHeader(PageResult page, Writer writer) throws IOException {
         writer.write("<a>[" + page.getUrl() + "](" + page.getUrl() + ")</a>\n");
         writer.write("<br>depth: " + page.getDepth() + "\n");
+    }
+
+    private void writeError(PageResult page, Writer writer) throws IOException {
+        writer.write("<br>**error:** " + page.getErrorMessage() + "\n");
     }
 
     private void writeHeadings(PageResult page, String arrowPrefix, Writer writer) throws IOException {
