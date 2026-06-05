@@ -13,28 +13,22 @@ public class ArgumentParser {
   // The final implementation was manually adapted and tested.
   public CrawlerConfiguration parse(String[] args) {
     if (args.length != EXPECTED_ARGUMENT_COUNT) {
-      throw new IllegalArgumentException("Expected exactly 3 arguments: <url> <depth> <domains>");
+      throw new IllegalArgumentException("Expected exactly 3 arguments: <urls> <depth> <domains>");
     }
 
-    String startUrl = args[URL_ARGUMENT_INDEX];
+    List<String> startUrls = parseCommaSeparatedValues(args[URL_ARGUMENT_INDEX]);
     int maxDepth = parseDepth(args[DEPTH_ARGUMENT_INDEX]);
+    List<String> allowedDomains = parseCommaSeparatedValues(args[DOMAINS_ARGUMENT_INDEX]);
 
-    String[] domainParts = args[DOMAINS_ARGUMENT_INDEX].split(",");
-    List<String> allowedDomains = new ArrayList<>();
-
-    for (String domainPart : domainParts) {
-      String trimmedDomain = domainPart.trim();
-
-      if (!trimmedDomain.isEmpty()) {
-        allowedDomains.add(trimmedDomain);
-      }
+    if (startUrls.isEmpty()) {
+      throw new IllegalArgumentException("At least one start URL is required");
     }
 
     if (allowedDomains.isEmpty()) {
       throw new IllegalArgumentException("At least one allowed domain is required");
     }
 
-    return new CrawlerConfiguration(startUrl, maxDepth, allowedDomains);
+    return new CrawlerConfiguration(startUrls, maxDepth, allowedDomains);
   }
 
   private int parseDepth(String depthArgument) {
@@ -49,5 +43,20 @@ public class ArgumentParser {
     } catch (NumberFormatException exception) {
       throw new IllegalArgumentException("Depth must be a valid integer", exception);
     }
+  }
+
+  private List<String> parseCommaSeparatedValues(String argument) {
+    String[] parts = argument.split(",");
+    List<String> values = new ArrayList<>();
+
+    for (String part : parts) {
+      String trimmedValue = part.trim();
+
+      if (!trimmedValue.isEmpty()) {
+        values.add(trimmedValue);
+      }
+    }
+
+    return values;
   }
 }

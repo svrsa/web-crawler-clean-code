@@ -4,6 +4,8 @@ import at.aau.webcrawler.config.ArgumentParser;
 import at.aau.webcrawler.config.CrawlerConfiguration;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -16,9 +18,22 @@ class ArgumentParserTest {
 
     CrawlerConfiguration configuration = parser.parse(args);
 
-    assertEquals("https://example.com", configuration.getStartUrl());
+    assertEquals(List.of("https://example.com"), configuration.getStartUrls());
     assertEquals(2, configuration.getMaxDepth());
     assertEquals(2, configuration.getAllowedDomains().size());
+  }
+
+  @Test
+  void shouldParseMultipleStartUrls() {
+    ArgumentParser parser = new ArgumentParser();
+    String[] args = {"https://example.com, https://example.org", "1", "example.com,example.org"};
+
+    CrawlerConfiguration configuration = parser.parse(args);
+
+    assertEquals(
+        List.of("https://example.com", "https://example.org"),
+        configuration.getStartUrls()
+    );
   }
 
   @Test
@@ -53,6 +68,14 @@ class ArgumentParserTest {
   void shouldThrowExceptionWhenDepthIsNotANumber() {
     ArgumentParser parser = new ArgumentParser();
     String[] args = {"https://example.com", "abc", "example.com"};
+
+    assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenStartUrlsAreEmpty() {
+    ArgumentParser parser = new ArgumentParser();
+    String[] args = {" , ", "1", "example.com"};
 
     assertThrows(IllegalArgumentException.class, () -> parser.parse(args));
   }

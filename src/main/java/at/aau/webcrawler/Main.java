@@ -7,6 +7,9 @@ import at.aau.webcrawler.model.LinkResult;
 import at.aau.webcrawler.model.PageResult;
 import at.aau.webcrawler.writer.MarkdownWriter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Main {
   public static void main(String[] args) {
     ArgumentParser argumentParser = new ArgumentParser();
@@ -16,10 +19,16 @@ public class Main {
         configuration.getMaxDepth(),
         configuration.getAllowedDomains()
     );
-    PageResult pageResult = webCrawler.crawl(configuration.getStartUrl());
-    new MarkdownWriter().writeReport(pageResult);
+    List<PageResult> pageResults = new ArrayList<>();
+    for (String startUrl : configuration.getStartUrls()) {
+      pageResults.add(webCrawler.crawl(startUrl));
+    }
+
+    new MarkdownWriter().writeReport(pageResults);
     System.out.println("Report wurde als report.md gespeichert.");
-    printPageResult(pageResult);
+    for (PageResult pageResult : pageResults) {
+      printPageResult(pageResult);
+    }
   }
 
   private static void printPageResult(PageResult pageResult) {
