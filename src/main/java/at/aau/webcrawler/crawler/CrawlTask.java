@@ -11,11 +11,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class CrawlTask implements Callable<CrawledPage> {
-  private static final Logger LOGGER = Logger.getLogger(CrawlTask.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(CrawlTask.class);
 
   private final String url;
   private final int depth;
@@ -41,7 +41,7 @@ class CrawlTask implements Callable<CrawledPage> {
       List<LinkResult> links = analyzeLinks(content.links());
       return CrawledPage.success(url, depth, content.headings(), links);
     } catch (PageLoadException exception) {
-      LOGGER.log(Level.SEVERE, "Could not crawl page: " + url, exception);
+      LOGGER.error("Could not crawl page: {}", url, exception);
       return CrawledPage.error(url, depth, exception.getMessage());
     }
   }

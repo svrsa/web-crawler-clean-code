@@ -14,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class CrawlCoordinator {
-  private static final Logger LOGGER = Logger.getLogger(CrawlCoordinator.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(CrawlCoordinator.class);
   private static final int NO_SUBMITTED_TASKS = 0;
 
   private final int maxDepth;
@@ -114,10 +114,10 @@ class CrawlCoordinator {
       return completionService.take().get();
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
-      LOGGER.log(Level.SEVERE, "Crawler was interrupted", exception);
+      LOGGER.error("Crawler was interrupted", exception);
       throw new IllegalStateException("Crawler was interrupted", exception);
     } catch (ExecutionException exception) {
-      LOGGER.log(Level.SEVERE, "Crawler task failed unexpectedly", exception);
+      LOGGER.error("Crawler task failed unexpectedly", exception);
       throw new IllegalStateException("Crawler task failed unexpectedly", exception);
     }
   }

@@ -6,12 +6,13 @@ import at.aau.webcrawler.crawler.WebCrawler;
 import at.aau.webcrawler.model.LinkResult;
 import at.aau.webcrawler.model.PageResult;
 import at.aau.webcrawler.writer.MarkdownWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class Main {
-  private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
   public static void main(String[] args) {
     ArgumentParser argumentParser = new ArgumentParser();
@@ -31,18 +32,18 @@ public class Main {
   }
 
   private static void printPageResult(PageResult pageResult) {
-    LOGGER.info("URL: " + pageResult.getUrl());
-    LOGGER.info("Depth: " + pageResult.getDepth());
+    LOGGER.info("URL: {}", pageResult.getUrl());
+    LOGGER.info("Depth: {}", pageResult.getDepth());
 
     if (pageResult.hasError()) {
-      LOGGER.info("Error: " + pageResult.getErrorMessage());
+      LOGGER.info("Error: {}", pageResult.getErrorMessage());
       return;
     }
 
-    LOGGER.info("Headings: " + pageResult.getHeadings());
+    LOGGER.info("Headings: {}", pageResult.getHeadings());
 
     for (LinkResult link : pageResult.getLinks()) {
-      LOGGER.info("Link: " + link.getUrl() + " (broken: " + link.isBroken() + ")");
+      LOGGER.info("Link: {} (broken: {})", link.getUrl(), link.isBroken());
     }
 
     for (PageResult childPage : pageResult.getChildPages()) {
