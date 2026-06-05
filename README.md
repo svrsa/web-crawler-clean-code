@@ -165,7 +165,7 @@ Example for a child page one level below root:
 
 The crawler should support:
 
-- command-line input for URL, depth, and domains
+- command-line input for start URL(s), depth, allowed domain(s), and optional thread count
 - recursive crawling up to the given depth
 - domain filtering
 - heading extraction
