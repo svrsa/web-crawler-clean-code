@@ -8,6 +8,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class MarkdownWriter {
 
@@ -26,8 +27,18 @@ public class MarkdownWriter {
     }
 
     public void writeReport(PageResult rootPage) {
+        writeReport(List.of(rootPage));
+    }
+
+    public void writeReport(List<PageResult> rootPages) {
         try (Writer writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8)) {
-            writePage(rootPage, rootPage.getDepth(), writer);
+            for (int index = 0; index < rootPages.size(); index++) {
+                if (index > 0) {
+                    writer.write("\n");
+                }
+                PageResult rootPage = rootPages.get(index);
+                writePage(rootPage, rootPage.getDepth(), writer);
+            }
         } catch (IOException e) {
             throw new ReportWriteException("Could not write report to: " + outputPath, e);
         }

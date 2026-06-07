@@ -3,18 +3,25 @@ package at.aau.webcrawler.config;
 import java.util.List;
 
 public class CrawlerConfiguration {
-  private final String startUrl;
+  private final List<String> startUrls;
   private final int maxDepth;
   private final List<String> allowedDomains;
+  private final int threadCount;
 
-  public CrawlerConfiguration(String startUrl, int maxDepth, List<String> allowedDomains) {
-    this.startUrl = startUrl;
+  public CrawlerConfiguration(
+      List<String> startUrls,
+      int maxDepth,
+      List<String> allowedDomains,
+      int threadCount
+  ) {
+    this.startUrls = List.copyOf(startUrls);
     this.maxDepth = maxDepth;
-    this.allowedDomains = allowedDomains;
+    this.allowedDomains = List.copyOf(allowedDomains);
+    this.threadCount = threadCount;
   }
 
-  public String getStartUrl() {
-    return startUrl;
+  public List<String> getStartUrls() {
+    return startUrls;
   }
 
   public int getMaxDepth() {
@@ -23,5 +30,9 @@ public class CrawlerConfiguration {
 
   public List<String> getAllowedDomains() {
     return allowedDomains;
+  }
+
+  public int getThreadCount() {
+    return threadCount;
   }
 }

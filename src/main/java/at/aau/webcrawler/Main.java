@@ -6,40 +6,46 @@ import at.aau.webcrawler.crawler.WebCrawler;
 import at.aau.webcrawler.model.LinkResult;
 import at.aau.webcrawler.model.PageResult;
 import at.aau.webcrawler.writer.MarkdownWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class Main {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+
   public static void main(String[] args) {
     ArgumentParser argumentParser = new ArgumentParser();
     CrawlerConfiguration configuration = argumentParser.parse(args);
 
     WebCrawler webCrawler = new WebCrawler(
         configuration.getMaxDepth(),
-        configuration.getAllowedDomains()
+        configuration.getAllowedDomains(),
+        configuration.getThreadCount()
     );
-    PageResult pageResult = webCrawler.crawl(configuration.getStartUrl());
-    new MarkdownWriter().writeReport(pageResult);
-    System.out.println("Report wurde als report.md gespeichert.");
-    printPageResult(pageResult);
+    List<PageResult> pageResults = webCrawler.crawl(configuration.getStartUrls());
+
+    new MarkdownWriter().writeReport(pageResults);
+    LOGGER.info("Report wurde als report.md gespeichert.");
+    for (PageResult pageResult : pageResults) {
+      printPageResult(pageResult);
+    }
   }
 
   private static void printPageResult(PageResult pageResult) {
-    System.out.println("URL: " + pageResult.getUrl());
-    System.out.println("Depth: " + pageResult.getDepth());
+    LOGGER.info("URL: {}", pageResult.getUrl());
+    LOGGER.info("Depth: {}", pageResult.getDepth());
 
     if (pageResult.hasError()) {
-      System.out.println("Error: " + pageResult.getErrorMessage());
-      System.out.println();
+      LOGGER.info("Error: {}", pageResult.getErrorMessage());
       return;
     }
 
-    System.out.println("Headings: " + pageResult.getHeadings());
+    LOGGER.info("Headings: {}", pageResult.getHeadings());
 
-    System.out.println("Links:");
     for (LinkResult link : pageResult.getLinks()) {
-      System.out.println("- " + link.getUrl() + " (broken: " + link.isBroken() + ")");
+      LOGGER.info("Link: {} (broken: {})", link.getUrl(), link.isBroken());
     }
-
-    System.out.println();
 
     for (PageResult childPage : pageResult.getChildPages()) {
       printPageResult(childPage);

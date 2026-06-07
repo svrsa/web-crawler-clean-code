@@ -117,7 +117,7 @@ public class WebCrawlerIntegrationTest {
         PageResult root = new WebCrawler(
                 config.getMaxDepth(),
                 config.getAllowedDomains()
-        ).crawl(config.getStartUrl());
+        ).crawl(config.getStartUrls().get(0));
 
         new MarkdownWriter(reportPath).writeReport(root);
     }

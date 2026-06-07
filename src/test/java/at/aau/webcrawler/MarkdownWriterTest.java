@@ -176,6 +176,26 @@ class MarkdownWriterTest {
     }
 
     @Test
+    void shouldWriteMultipleRootPages() throws IOException {
+        PageResult firstRoot = PageResult.builder("http://example.com", 0)
+                .headings(List.of("# First"))
+                .build();
+        PageResult secondRoot = PageResult.builder("http://example.org", 0)
+                .headings(List.of("# Second"))
+                .build();
+
+        writer.writeReport(List.of(firstRoot, secondRoot));
+        String content = Files.readString(reportPath);
+
+        assertTrue(content.contains("<a>[http://example.com](http://example.com)</a>"),
+                "First root page should be present");
+        assertTrue(content.contains("<a>[http://example.org](http://example.org)</a>"),
+                "Second root page should be present");
+        assertTrue(content.contains("# First"), "First root heading should be present");
+        assertTrue(content.contains("# Second"), "Second root heading should be present");
+    }
+
+    @Test
     void shouldStillRenderSiblingsWhenOneChildPageFailed() throws IOException {
         PageResult failingChild = PageResult.error("http://example.com/down", 1, "host unreachable");
         PageResult workingChild = PageResult.builder("http://example.com/ok", 1)

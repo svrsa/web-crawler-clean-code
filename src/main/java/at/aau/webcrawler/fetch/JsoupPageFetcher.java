@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * jsoup-backed implementation of {@link PageFetcher}.
- * This is the only main-source class that imports {@code org.jsoup.*}.
+ * Keeps jsoup-specific HTML loading and parsing behind the fetch boundary.
  */
 public class JsoupPageFetcher implements PageFetcher {
   private static final int DEFAULT_TIMEOUT_MS = 5000;
